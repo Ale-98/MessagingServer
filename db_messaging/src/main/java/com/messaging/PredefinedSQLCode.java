@@ -31,7 +31,8 @@ public class PredefinedSQLCode {
 	public static final String insert_table_queries[] = {
 
 			"insert into client(nickname, password) values(?, ?)", //query parametrica
-			"insert into message(nickname, dest, datasend, datareceive, delivered, type) values(?, ?, ?, ?, ?, ?)"
+			"insert into message(nickname, dest, datasend, datareceive, delivered, type) values(?, ?, ?, ?, ?, ?)",
+			"insert into date(giorno) values(?)"
 
 	};
 

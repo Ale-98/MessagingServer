@@ -29,7 +29,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 			String msg = "";
 			String who = "";
 			while(!msg.equals("shutdown")) {
-				System.out.println("A chi vuoi mandare un messaggio?\n");
+				System.out.println("A chi vuoi mandare un messaggio?");
 				System.out.println("Utenti loggati: "+server.getLogged());
 				who = br.readLine();
 				System.out.println("Connesso con "+who);
@@ -51,9 +51,9 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 	protected Client() throws IOException {
 		super();
 		br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("Inserisci nickname: \n");
+		System.out.println("Inserisci nickname: ");
 		nick = br.readLine();
-		System.out.println("Inserisci password: \n");
+		System.out.println("Inserisci password: ");
 		password = br.readLine();
 		System.out.println("===Benvenuto/a!!===");
 	}

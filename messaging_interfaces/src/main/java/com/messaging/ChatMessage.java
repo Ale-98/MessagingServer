@@ -10,6 +10,9 @@ public class ChatMessage implements Serializable{
 	private String from;
 	private String to;
 	private long timeSend;
+	private Date dataSend;
+	private Date dataReceive;
+	private 
 	
 	public ChatMessage(String text, String from, String to) {
 		this.text = text;

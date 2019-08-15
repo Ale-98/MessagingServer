@@ -17,7 +17,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	// Connecting to DB
 	private QueryExecutor qe;
-	String url="jdbc:postgresql://localhost/postgres";
+	String url="jdbc:postgresql://localhost/dbRdF";
 	String usr="postgres";
 	String pwd="6357";
 
@@ -55,7 +55,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			mc.infoMsg("Error while trying to register to DB");
 			System.err.println("Client already in DB");
 			mc.infoMsg("Client already in DB");
-			//			e.printStackTrace();
+			e.printStackTrace();
 			signIn(mc, nickname); // Se già presente in DB fa signIn ma ritorna false
 			return false;
 		} 
@@ -172,5 +172,10 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 			return -1;
 		}
+	}
+
+	public boolean storeMessage(ChatMessage cm) throws RemoteException {
+		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
+		return false;
 	}
 }

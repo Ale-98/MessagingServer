@@ -15,5 +15,6 @@ public interface MessagingServer extends Remote{
 	public void notyUnsubscribedClient(String unsubscribedClient)throws RemoteException;
 	public boolean logOut(String nickname)throws RemoteException;
 	public String getLogged()throws RemoteException;
+	public boolean storeMessage(ChatMessage cm)throws RemoteException;
 	
 }

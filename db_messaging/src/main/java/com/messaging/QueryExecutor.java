@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -15,6 +16,7 @@ import java.util.StringTokenizer;
 public class QueryExecutor {
 	private Connection con;
 
+	// For debbugging end service ----------------------------------------------------------
 	public Connection getCon() {
 		return con;
 	}
@@ -35,11 +37,13 @@ public class QueryExecutor {
 		return conn;
 	}
 
+	// The builder
 	public QueryExecutor(String url, String usr, String pwd) throws SQLException{
 		con=openConnection(url,usr,pwd);
 		System.out.println("Connesso al db "+con.getCatalog());
 	}
 
+	// Generic query executors methods ---------------------------------------------
 	public String execute_DD_query(String sqlCode) throws SQLException{
 
 		String success = "Success";
@@ -108,7 +112,7 @@ public class QueryExecutor {
 	}
 
 	// DDQueryExecutor con parametro... aggiungere parametri e setX(..) corrispondenti per eseguire query parametriche
-	
+	// Query methods for messaging system ----------------------------------------------------------
 	public void addClientToDB(String nickname, String password) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
@@ -288,6 +292,24 @@ public class QueryExecutor {
 			QueryExecutor.printSQLException(e);
 		}
 		return result;
+	}
+	
+	public boolean insertDate(Date data) throws SQLException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[2]);
+			stmt.setDate(1, (java.sql.Date) data);
+			stmt.executeUpdate();
+		}
+		catch(SQLException e) {	
+			e.printStackTrace();
+			printSQLException(e);
+			return false;
+		}
+		finally {	
+			if(stmt!=null) stmt.close();
+		}
+		return true;
 	}
 	
 }

@@ -175,7 +175,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	}
 
 	public boolean storeMessage(ChatMessage cm) throws RemoteException {
-		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
+//		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
 		return false;
 	}
 }

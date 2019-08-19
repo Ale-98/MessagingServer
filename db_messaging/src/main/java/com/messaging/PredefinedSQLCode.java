@@ -30,7 +30,7 @@ public class PredefinedSQLCode {
 
 	public static final String insert_table_queries[] = {
 
-			"insert into client(nickname, password) values(?, ?)", //query parametrica
+			"insert into client(nickname, password, isAdmin) values(?, ?, ?)", //query parametrica
 			"insert into message(nickname, dest, datasend, datareceive, delivered, type) values(?, ?, ?, ?, ?, ?)",
 			"insert into date(giorno) values(?)"
 
@@ -43,7 +43,8 @@ public class PredefinedSQLCode {
 			"select count(*) from message",
 			"select count(*) from client where datasend between ? and ?",
 			"select count(*) from message where datasend between ? and ?",
-			"select avg(datareceive-datasend) from message where datasend between ? and ?"
+			"select avg(datareceive-datasend) from message where datasend between ? and ?",
+			"select * from client"
 
 	};
 

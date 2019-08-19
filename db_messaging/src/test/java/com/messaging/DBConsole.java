@@ -84,7 +84,7 @@ public class DBConsole extends JFrame{
 
 		String result = "";
 		try {
-			QueryExecutor qe = new QueryExecutor(url, usr, pwd);
+			QueryExecutor qe = QueryExecutor.getInstance(url, usr, pwd);
 			StringTokenizer stk = new StringTokenizer(query, " ");
 			String type = stk.nextToken();
 			if(type.equals("create")||type.equals("drop")) {

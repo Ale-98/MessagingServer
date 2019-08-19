@@ -27,7 +27,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	protected Server() throws RemoteException {
 		super();
 		try {
-			qe = new QueryExecutor(url, usr, pwd);
+			qe = QueryExecutor.getInstance(url, usr, pwd);
 		} catch (SQLException e) {
 			System.err.println("Error connecing to db");
 			e.printStackTrace();
@@ -48,7 +48,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	public boolean signUp(MessagingClient mc, String nickname, String password) throws RemoteException {
 		try {
-			qe.addClientToDB(nickname, password);
+			qe.addClientToDB(nickname, password, false); // Come gestire gli admin?
 			notyNewClient(nickname);
 		} catch (SQLException e) {
 			System.err.println("Error while trying to register to DB");
@@ -93,6 +93,12 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		return false;
 	}
 
+	/**
+	 * Send a broadcast message to all clients given as paramenters
+	 * @param msg The message to send
+	 * @param toClients All the receivers o f the Message
+	 * @return true if all messages succeded, false if there are messages not sended 
+	 */
 	public boolean sendMultiMessage(String msg, String... toClients) throws RemoteException {
 		List<String> dests = Arrays.asList(toClients);
 		boolean errors = true;
@@ -140,10 +146,16 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
+	public boolean storeMessage(ChatMessage cm) throws RemoteException {
+//		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
+		return false;
+	}
+	
 	public String getLogged()throws RemoteException{
 		return logged.keySet().toString();
 	}
 
+	// For monitoring ------------------------------------------------------------------------
 	public int getRegisteredPerPeriod(Timestamp from, Timestamp to) throws RemoteException {
 		try {
 			return qe.getElementsPerPeriod(from, to, "Client");
@@ -172,10 +184,5 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 			return -1;
 		}
-	}
-
-	public boolean storeMessage(ChatMessage cm) throws RemoteException {
-//		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
-		return false;
 	}
 }

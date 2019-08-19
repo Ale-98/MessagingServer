@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -15,6 +16,8 @@ import java.util.StringTokenizer;
 
 public class QueryExecutor {
 	private Connection con;
+
+	private static QueryExecutor qe;
 
 	// For debbugging end service ----------------------------------------------------------
 	public Connection getCon() {
@@ -38,9 +41,17 @@ public class QueryExecutor {
 	}
 
 	// The builder
-	public QueryExecutor(String url, String usr, String pwd) throws SQLException{
+	private QueryExecutor(String url, String usr, String pwd) throws SQLException{
 		con=openConnection(url,usr,pwd);
 		System.out.println("Connesso al db "+con.getCatalog());
+	}
+
+	// Singleton pattern
+	public static QueryExecutor getInstance(String url, String usr, String pwd) throws SQLException {
+		if(qe == null) {
+			qe = new QueryExecutor(url, usr, pwd);
+		}
+		return qe;
 	}
 
 	// Generic query executors methods ---------------------------------------------
@@ -113,23 +124,24 @@ public class QueryExecutor {
 
 	// DDQueryExecutor con parametro... aggiungere parametri e setX(..) corrispondenti per eseguire query parametriche
 	// Query methods for messaging system ----------------------------------------------------------
-	public void addClientToDB(String nickname, String password) throws SQLException {
+	public void addClientToDB(String nickname, String password, boolean isAdmin) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[0]);
 			stmt.setString(1, nickname);
 			stmt.setString(2, password);
+			stmt.setBoolean(3, isAdmin);
 			stmt.executeUpdate();
 		}
 		catch(SQLException e) {	
-//			e.printStackTrace();
+			//			e.printStackTrace();
 			printSQLException(e);
 		}
 		finally {	
 			if(stmt!=null) stmt.close();
 		}
 	}
-	
+
 	public void addMessageToDB(String nickname, String dest, Timestamp datasend, Timestamp datareceive, boolean delivered, char type) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
@@ -150,7 +162,7 @@ public class QueryExecutor {
 			if(stmt!=null) stmt.close();
 		}
 	}
-	
+
 	public void removeClientFromDB(String nickname) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
@@ -166,7 +178,7 @@ public class QueryExecutor {
 			if(stmt!=null) stmt.close();
 		}
 	}
-	
+
 	public List<String> getRegisteredClients() throws SQLException{
 		List<String> registered = new ArrayList<String>();
 		Statement stmt = null;
@@ -190,7 +202,7 @@ public class QueryExecutor {
 		}
 		return registered;
 	}
-	
+
 	public double getAvgLatencyPerPeriod(Timestamp from, Timestamp to) throws SQLException {
 		PreparedStatement stmt = null;
 		double avg = 0;
@@ -216,7 +228,7 @@ public class QueryExecutor {
 		}
 		return avg;
 	}
-	
+
 	public int countElements(String what) throws SQLException {
 		Statement stmt = null;
 		int count = 0;
@@ -243,7 +255,7 @@ public class QueryExecutor {
 		}
 		return count;
 	}
-	
+
 	public int getElementsPerPeriod(Timestamp from, Timestamp to, String what)throws SQLException {
 		PreparedStatement stmt = null;
 		int count = 0;
@@ -255,7 +267,7 @@ public class QueryExecutor {
 			stmt.setTimestamp(1, from);
 			stmt.setTimestamp(2, to);
 			ResultSet rs = stmt.executeQuery();
-			
+
 			while(rs.next()) {
 				int numCol = rs.getMetaData().getColumnCount();
 				for(int i = 1; i<=numCol; i++) {
@@ -273,6 +285,47 @@ public class QueryExecutor {
 		return count;
 	}
 	
+	public Collection<User> findAll() throws SQLException{
+		
+		Collection<User> result = new ArrayList<User>();
+		String nickName = null;
+		String pwd = null;
+//		boolean isAdmin;
+		Statement stmt = null;
+		try {
+			stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
+			//System.out.println(sqlCode);
+
+			while(rs.next()) {
+				int numCol = rs.getMetaData().getColumnCount();
+				for(int i = 1; i<=numCol; i++) {
+					switch(i) {
+					case 1:
+						nickName = rs.getString(i);
+						break;
+					case 2:
+						pwd = rs.getString(i);
+						break;
+//					case 3:
+//						isAdmin = rs.getBoolean(i);
+//						break;
+					}
+				}
+				result.add(new User(nickName, pwd));
+			}
+		}
+		catch(SQLException e) {	
+			e.printStackTrace();
+			printSQLException(e);
+		}
+		finally {	
+			if(stmt!=null) stmt.close();
+		}
+		return result;
+	}
+
+	// Test & Maintenance
 	// Per interfaccia server-->manutenzione DB
 	public String chooseAndExecuteQuery(String query) {
 
@@ -293,7 +346,8 @@ public class QueryExecutor {
 		}
 		return result;
 	}
-	
+
+	// da togliere
 	public boolean insertDate(Date data) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
@@ -311,7 +365,7 @@ public class QueryExecutor {
 		}
 		return true;
 	}
-	
+
 }
 
 

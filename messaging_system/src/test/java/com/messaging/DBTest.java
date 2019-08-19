@@ -1,8 +1,7 @@
 package com.messaging;
 
-import java.util.Date;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
 
 public class DBTest {
@@ -12,15 +11,19 @@ public class DBTest {
 		String usr="postgres";
 		String pwd="6357";
 		
-		QueryExecutor qe = new QueryExecutor(url, usr, pwd);
+		QueryExecutor qe = QueryExecutor.getInstance(url, usr, pwd);
 //		qe.removeClientFromDB("Mamma");
-		Timestamp now = new Timestamp(0);
-		System.out.println(now);
-		System.out.println(qe.countElements("Msg"));
+		System.out.println("Numero messaggi in DB "+qe.countElements("Msg"));
 //		System.out.println(qe.getElementsPerPeriod(new Timestamp(6, 8, 2019, 9, 40, 0, 0), new Timestamp(6, 8, 2019, 9, 45, 0, 0), "Msg"));
+		System.out.println("=== Clients in DB ===");
 		List<String> registered = qe.getRegisteredClients();
 		for(String s:registered) {
 			System.out.println(s);
+		}
+		Collection<User> users = qe.findAll();
+		System.out.println("Numero users in DB "+users.size());
+		for(User u:users) {
+			System.out.println(u.getNickName()+" "+u.getPassword()+" "+u.isAdmin());
 		}
 	}
 

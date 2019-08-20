@@ -41,7 +41,7 @@ public class QueryExecutor {
 	}
 
 	// The builder
-	private QueryExecutor(String url, String usr, String pwd) throws SQLException{
+	public QueryExecutor(String url, String usr, String pwd) throws SQLException{
 		con=openConnection(url,usr,pwd);
 		System.out.println("Connesso al db "+con.getCatalog());
 	}
@@ -284,13 +284,18 @@ public class QueryExecutor {
 		}
 		return count;
 	}
-	
+
 	public Collection<User> findAll() throws SQLException{
-		
+		return findAll(null);
+	}
+
+	// For MainView textFiltering by nickname
+	public Collection<User> findAll(String stringFilter) throws SQLException{
+
 		Collection<User> result = new ArrayList<User>();
 		String nickName = null;
 		String pwd = null;
-//		boolean isAdmin;
+		//		boolean isAdmin;
 		Statement stmt = null;
 		try {
 			stmt = con.createStatement();
@@ -307,12 +312,14 @@ public class QueryExecutor {
 					case 2:
 						pwd = rs.getString(i);
 						break;
-//					case 3:
-//						isAdmin = rs.getBoolean(i);
-//						break;
+						//					case 3:
+						//						isAdmin = rs.getBoolean(i);
+						//						break;
 					}
 				}
-				result.add(new User(nickName, pwd));
+				if((stringFilter == null || stringFilter.isEmpty()) || nickName.toLowerCase().contains(stringFilter.toLowerCase())) {
+					result.add(new User(nickName, pwd));
+				}
 			}
 		}
 		catch(SQLException e) {	

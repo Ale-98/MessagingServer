@@ -11,7 +11,7 @@ public class DBTest {
 		String usr="postgres";
 		String pwd="6357";
 		
-		QueryExecutor qe = QueryExecutor.getInstance(url, usr, pwd);
+		QueryExecutor qe = new QueryExecutor(url, usr, pwd);
 //		qe.removeClientFromDB("Mamma");
 		System.out.println("Numero messaggi in DB "+qe.countElements("Msg"));
 //		System.out.println(qe.getElementsPerPeriod(new Timestamp(6, 8, 2019, 9, 40, 0, 0), new Timestamp(6, 8, 2019, 9, 45, 0, 0), "Msg"));

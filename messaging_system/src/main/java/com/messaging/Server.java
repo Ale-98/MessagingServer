@@ -27,7 +27,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	protected Server() throws RemoteException {
 		super();
 		try {
-			qe = QueryExecutor.getInstance(url, usr, pwd);
+			qe = new QueryExecutor(url, usr, pwd);
 		} catch (SQLException e) {
 			System.err.println("Error connecing to db");
 			e.printStackTrace();

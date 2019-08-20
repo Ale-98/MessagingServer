@@ -3,6 +3,8 @@ package com.messaging;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,15 +31,18 @@ public class MainView extends VerticalLayout {
 	String url="jdbc:postgresql://localhost/dbRdF";
 	String usr="postgres";
 	String psw="6357";
+	private QueryExecutor qe;
 	
 	private String nick = "Ale";
 	private String pwd = "password";
+	
 	private Grid<User> users = new Grid<>(User.class);
-	private QueryExecutor qe;
+	private TextField filter = new TextField();
 	
 	public void connectToDB() {
 		try {
 			qe = QueryExecutor.getInstance(url, usr, psw);
+			notifyMe("Connesso al DB postgres", 3000);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -50,7 +55,7 @@ public class MainView extends VerticalLayout {
         setSizeFull();
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         
-        H1 header = new H1("Login as Admin");
+        H1 header = new H1("Admin personal area");
         header.getElement().getThemeList().add("dark");
         
         add(header);
@@ -80,24 +85,37 @@ public class MainView extends VerticalLayout {
 	}
 
 	private void showMainMenu() {
-		HorizontalLayout main = new HorizontalLayout();
-		try {
-			users.setItems(qe.findAll());
-//			Collection<User> col = new ArrayList<User>();
-//			col.add(new User("Ale", "password"));
-//			users.setItems(col);
-			notifyMe("Data retrieved successfully", 3000);
-		} catch (SQLException e) {
-			notifyMe("Error retieving information from DB", 3000);
-			e.printStackTrace();
-		}
-		users.setSizeFull();
-		main.setSizeFull();
+		filter.setPlaceholder("filter by nickname...");
+		filter.addValueChangeListener(e->updateList());
 		
-		main.add(users);
+		Button clearFilter = new Button();
+		clearFilter.setIcon(new Icon(VaadinIcon.ERASER));
+		clearFilter.addClickListener(e->filter.clear());
+		
+		HorizontalLayout toolbar = new HorizontalLayout();
+		toolbar.add(filter, clearFilter);
+		
+		VerticalLayout main = new VerticalLayout();
+		main.setSizeFull();
+		users.setSizeFull();
+		
+		updateList();
+		
+		main.add(toolbar, users);
 		add(main);
 	}
 	
+	private Object updateList() {
+		try {
+			users.setItems(qe.findAll(filter.getValue()));
+			notifyMe("Data retrieved successfully", 3000);
+		} catch (SQLException e) {
+			notifyMe("Fail retrieving data from DB", 3000);
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	// For graphical notifications
 	private void notifyMe(String text, int duration) {
 		Notification noty = new Notification(text);

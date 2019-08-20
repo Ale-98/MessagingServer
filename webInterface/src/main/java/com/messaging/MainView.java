@@ -66,7 +66,7 @@ public class MainView extends VerticalLayout {
 		
 		login.addClickListener(click->{
 			if(nickname.getValue().equals(nick)&&password.getValue().equals(pwd)) {
-//				connectToDB();
+				connectToDB();
 				remove(vl);
 				showMainMenu();
 			} else {
@@ -81,16 +81,16 @@ public class MainView extends VerticalLayout {
 
 	private void showMainMenu() {
 		HorizontalLayout main = new HorizontalLayout();
-//		try {
-//			users.setItems(qe.findAll());
-			Collection<User> col = new ArrayList<User>();
-			col.add(new User("Ale", "password"));
-			users.setItems(col);
+		try {
+			users.setItems(qe.findAll());
+//			Collection<User> col = new ArrayList<User>();
+//			col.add(new User("Ale", "password"));
+//			users.setItems(col);
 			notifyMe("Data retrieved successfully", 3000);
-//		} catch (SQLException e) {
-//			notifyMe("Error retieving information from DB", 3000);
-//			e.printStackTrace();
-//		}
+		} catch (SQLException e) {
+			notifyMe("Error retieving information from DB", 3000);
+			e.printStackTrace();
+		}
 		users.setSizeFull();
 		main.setSizeFull();
 		

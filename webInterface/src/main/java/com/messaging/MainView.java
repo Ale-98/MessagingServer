@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.router.Route;
 
@@ -87,6 +88,7 @@ public class MainView extends VerticalLayout {
 	private void showMainMenu() {
 		filter.setPlaceholder("filter by nickname...");
 		filter.addValueChangeListener(e->updateList());
+		filter.setValueChangeMode(ValueChangeMode.ON_CHANGE);
 		
 		Button clearFilter = new Button();
 		clearFilter.setIcon(new Icon(VaadinIcon.ERASER));
@@ -107,7 +109,7 @@ public class MainView extends VerticalLayout {
 	
 	private Object updateList() {
 		try {
-			users.setItems(qe.findAll(filter.getValue()));
+			users.setItems(qe.findAll());
 			notifyMe("Data retrieved successfully", 3000);
 		} catch (SQLException e) {
 			notifyMe("Fail retrieving data from DB", 3000);

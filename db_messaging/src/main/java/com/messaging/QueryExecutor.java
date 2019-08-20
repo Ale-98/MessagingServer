@@ -285,12 +285,8 @@ public class QueryExecutor {
 		return count;
 	}
 
-	public Collection<User> findAll() throws SQLException{
-		return findAll(null);
-	}
-
 	// For MainView textFiltering by nickname
-	public Collection<User> findAll(String stringFilter) throws SQLException{
+	public Collection<User> findAll() throws SQLException{
 
 		Collection<User> result = new ArrayList<User>();
 		String nickName = null;
@@ -317,9 +313,8 @@ public class QueryExecutor {
 						//						break;
 					}
 				}
-				if((stringFilter == null || stringFilter.isEmpty()) || nickName.toLowerCase().contains(stringFilter.toLowerCase())) {
 					result.add(new User(nickName, pwd));
-				}
+//				}
 			}
 		}
 		catch(SQLException e) {	

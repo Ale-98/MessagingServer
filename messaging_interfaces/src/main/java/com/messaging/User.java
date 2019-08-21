@@ -14,7 +14,7 @@ public class User implements Serializable, Cloneable{
 		this.nickName = nickName;
 		this.password = pwd;
 	}
-
+	
 	public String getNickName() {
 		return nickName;
 	}
@@ -43,5 +43,4 @@ public class User implements Serializable, Cloneable{
 	public User clone() throws CloneNotSupportedException {
 		return (User) super.clone();
 	}
-	
 }

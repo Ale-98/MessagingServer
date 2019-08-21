@@ -9,8 +9,11 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -32,7 +35,8 @@ public class MainView extends VerticalLayout {
 	String url="jdbc:postgresql://localhost/dbRdF";
 	String usr="postgres";
 	String psw="6357";
-	private QueryExecutor qe;
+	
+	private DataRetriever dr;
 	
 	private String nick = "Ale";
 	private String pwd = "password";
@@ -42,7 +46,7 @@ public class MainView extends VerticalLayout {
 	
 	public void connectToDB() {
 		try {
-			qe = QueryExecutor.getInstance(url, usr, psw);
+			dr = new DataRetriever(url, usr, psw);
 			notifyMe("Connesso al DB postgres", 3000);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -88,7 +92,7 @@ public class MainView extends VerticalLayout {
 	private void showMainMenu() {
 		filter.setPlaceholder("filter by nickname...");
 		filter.addValueChangeListener(e->updateList());
-		filter.setValueChangeMode(ValueChangeMode.ON_CHANGE);
+		filter.setValueChangeMode(ValueChangeMode.EAGER);
 		
 		Button clearFilter = new Button();
 		clearFilter.setIcon(new Icon(VaadinIcon.ERASER));
@@ -101,28 +105,20 @@ public class MainView extends VerticalLayout {
 		main.setSizeFull();
 		users.setSizeFull();
 		
-		updateList();
+		users.setItems(dr.refreshList());
 		
 		main.add(toolbar, users);
 		add(main);
 	}
 	
-	private Object updateList() {
-		try {
-			users.setItems(qe.findAll());
-			notifyMe("Data retrieved successfully", 3000);
-		} catch (SQLException e) {
-			notifyMe("Fail retrieving data from DB", 3000);
-			e.printStackTrace();
-		}
-		return null;
+	private void updateList() {
+		users.setItems(dr.findAll(filter.getValue()));
+		notifyMe("Data retrieved successfully", 3000);
 	}
 
 	// For graphical notifications
 	private void notifyMe(String text, int duration) {
-		Notification noty = new Notification(text);
-		noty.setDuration(duration);
-		noty.open();
+		Notification.show("Data retrieved succesfully", 3000, Position.BOTTOM_START);
 	}
 	
 }

@@ -40,6 +40,11 @@ public class User implements Serializable, Cloneable{
 	}
 	
 	@Override
+	public String toString() {
+		return nickName;
+	}
+	
+	@Override
 	public User clone() throws CloneNotSupportedException {
 		return (User) super.clone();
 	}

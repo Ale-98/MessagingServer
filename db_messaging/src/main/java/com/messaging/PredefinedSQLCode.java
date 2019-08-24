@@ -44,7 +44,8 @@ public class PredefinedSQLCode {
 			"select count(*) from client where datasend between ? and ?",
 			"select count(*) from message where datasend between ? and ?",
 			"select avg(datareceive-datasend) from message where datasend between ? and ?",
-			"select * from client"
+			"select * from client",
+			"select * from message"
 
 	};
 

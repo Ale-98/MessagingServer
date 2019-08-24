@@ -1,15 +1,16 @@
 package com.messaging;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -142,14 +143,15 @@ public class QueryExecutor {
 		}
 	}
 
-	public void addMessageToDB(String nickname, String dest, Timestamp datasend, Timestamp datareceive, boolean delivered, char type) throws SQLException {
+	@SuppressWarnings("deprecation")
+	public void addMessageToDB(String nickname, String dest, LocalDate date, long latency, boolean delivered, char type) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[1]);
 			stmt.setString(1, nickname);
 			stmt.setString(2, dest);
-			stmt.setTimestamp(3, datasend);
-			stmt.setTimestamp(4, datareceive);
+			stmt.setDate(3, new Date(date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
+			stmt.setLong(4, latency);
 			stmt.setBoolean(5, delivered);
 			stmt.setInt(6, type);
 			stmt.executeUpdate();
@@ -203,13 +205,14 @@ public class QueryExecutor {
 		return registered;
 	}
 
-	public double getAvgLatencyPerPeriod(Timestamp from, Timestamp to) throws SQLException {
+	@SuppressWarnings("deprecation")
+	public double getAvgLatencyPerPeriod(LocalDate from, LocalDate to) throws SQLException {
 		PreparedStatement stmt = null;
 		double avg = 0;
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.select_queries[5]);
-			stmt.setTimestamp(1, from);
-			stmt.setTimestamp(2, to);
+			stmt.setDate(1, new Date(from.getYear(), from.getMonthValue(), from.getDayOfMonth()));
+			stmt.setDate(2, new Date(to.getYear(), to.getMonthValue(), to.getDayOfMonth()));
 			ResultSet rs = stmt.executeQuery();
 
 			while(rs.next()) {
@@ -229,6 +232,7 @@ public class QueryExecutor {
 		return avg;
 	}
 
+	// Counts elements in DB, if what equals Clients return the number of Clients, if what equals Msg return the number of messages
 	public int countElements(String what) throws SQLException {
 		Statement stmt = null;
 		int count = 0;
@@ -256,7 +260,8 @@ public class QueryExecutor {
 		return count;
 	}
 
-	public int getElementsPerPeriod(Timestamp from, Timestamp to, String what)throws SQLException {
+	@SuppressWarnings("deprecation")
+	public int countElementsPerPeriod(LocalDate from, LocalDate to, String what)throws SQLException {
 		PreparedStatement stmt = null;
 		int count = 0;
 		try {
@@ -264,8 +269,8 @@ public class QueryExecutor {
 			else if(what.equals("Msg")) stmt = con.prepareStatement(PredefinedSQLCode.select_queries[4]);
 			else System.err.println("Don't know what to count");
 
-			stmt.setTimestamp(1, from);
-			stmt.setTimestamp(2, to);
+			stmt.setDate(1, new Date(from.getYear(), from.getMonthValue(), from.getDayOfMonth()));
+			stmt.setDate(2, new Date(to.getYear(), to.getMonthValue(), to.getDayOfMonth()));
 			ResultSet rs = stmt.executeQuery();
 
 			while(rs.next()) {
@@ -286,7 +291,7 @@ public class QueryExecutor {
 	}
 
 	// For MainView textFiltering by nickname
-	public Collection<User> findAll() throws SQLException{
+	public Collection<User> findAllUsers() throws SQLException{
 
 		Collection<User> result = new ArrayList<User>();
 		String nickName = null;
@@ -296,7 +301,6 @@ public class QueryExecutor {
 		try {
 			stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
-			//System.out.println(sqlCode);
 
 			while(rs.next()) {
 				int numCol = rs.getMetaData().getColumnCount();
@@ -327,6 +331,60 @@ public class QueryExecutor {
 		return result;
 	}
 
+	// For MainView textFiltering by nickname
+		public Collection<ChatMessage> findAllMsgs() throws SQLException{
+
+			Collection<ChatMessage> result = new ArrayList<ChatMessage>();
+			String nickName = null;
+			String dest = null;
+			Date dataSend = null;
+			long latency = 0;
+			boolean delivered = false;
+			char type = 0;
+			Statement stmt = null;
+			try {
+				stmt = con.createStatement();
+				ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
+
+				while(rs.next()) {
+					int numCol = rs.getMetaData().getColumnCount();
+					for(int i = 1; i<=numCol; i++) {
+						switch(i) {
+						case 1:
+							nickName = rs.getString(i);
+							break;
+						case 2:
+							dest = rs.getString(i);
+							break;
+						case 3:
+							dataSend = rs.getDate(i);
+							break;
+						case 4:
+							latency = rs.getLong(i);
+							break;
+						case 5:
+							delivered = rs.getBoolean(i);
+							break;
+						case 6:
+							type = (char)rs.getInt(i);
+							break;
+						}
+					}
+						result.add(new ChatMessage(nickName, dest, dataSend, latency, delivered, type));
+//					}
+				}
+			}
+			catch(SQLException e) {	
+				e.printStackTrace();
+				printSQLException(e);
+			}
+			finally {	
+				if(stmt!=null) stmt.close();
+			}
+			return result;
+		}
+
+	
 	// Test & Maintenance
 	// Per interfaccia server-->manutenzione DB
 	public String chooseAndExecuteQuery(String query) {

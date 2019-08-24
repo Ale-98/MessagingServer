@@ -1,28 +1,40 @@
 package com.messaging;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.sql.Date;
 
 public class ChatMessage implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
-	private String text;
-	private long timeSend;
-	
 	private String from;
 	private String to;
 	private Date dataSend;
-	private Date dataReceive;
-	private float latency;
+	private long latency;
 	private boolean delivered;
 	private char type;
 	
-	public ChatMessage(String text, String from, String to) {
-		this.text = text;
+	public ChatMessage(String from, String to, Date datasend, long latency, boolean delivered, char type) {
 		this.from = from;
 		this.to = to;
-		timeSend = System.currentTimeMillis(); // For measuring latency
+		this.dataSend = datasend;
+		this.latency = latency;
+		this.delivered = delivered;
+		this.type = type;
+	}
+	
+	@SuppressWarnings("deprecation")
+	private Timestamp toTimestamp(LocalDateTime now) {
+		return new Timestamp(now.getYear(), 
+							now.getMonthValue(), 
+							now.getDayOfMonth(),
+							now.getHour(),
+							now.getMinute(),
+							now.getSecond(),
+							now.getNano());
 	}
 	
 	public Date getDataSend() {
@@ -33,19 +45,11 @@ public class ChatMessage implements Serializable{
 		this.dataSend = dataSend;
 	}
 
-	public Date getDataReceive() {
-		return dataReceive;
-	}
-
-	public void setDataReceive(Date dataReceive) {
-		this.dataReceive = dataReceive;
-	}
-
 	public float getLatency() {
 		return latency;
 	}
 
-	public void setLatency(float latency) {
+	public void setLatency(long latency) {
 		this.latency = latency;
 	}
 
@@ -80,21 +84,4 @@ public class ChatMessage implements Serializable{
 	public void setTo(String to) {
 		this.to = to;
 	}
-	
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public long getTimeSend() {
-		return timeSend;
-	}
-
-	public void setTimeSend(long timeSend) {
-		this.timeSend = timeSend;
-	}
-	
 }

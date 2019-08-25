@@ -17,5 +17,11 @@
 			<artifactId>postgresql</artifactId>
 			<version>42.2.6</version>
 		</dependency>
+		<!-- For accessing User type -->
+		<dependency>
+			<groupId>com.messaging</groupId>
+			<artifactId>messaging_interfaces</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

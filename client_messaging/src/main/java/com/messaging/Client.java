@@ -28,7 +28,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 			System.out.println("Registered: "+state);
 			String msg = "";
 			String who = "";
-			while(!msg.equals("shutdown")) {
+			while(!msg.equals("exit")) {
 				System.out.println("A chi vuoi mandare un messaggio?");
 				System.out.println("Utenti loggati: "+server.getLogged());
 				who = br.readLine();
@@ -36,7 +36,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 				while(!msg.equalsIgnoreCase("exit")) {
 					System.out.println("To: "+who);
 					msg = br.readLine();
-					server.sendMsg(msg, who); 
+					server.sendMessage(c.getNick(), msg, System.currentTimeMillis(), who); 
 				}
 			}
 		} catch (RemoteException e) {
@@ -66,8 +66,9 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 		return password;
 	}
 
-	public void receiveMsg(String msg) throws RemoteException {
+	public long receiveMsg(String msg) throws RemoteException {
 		System.out.println("Message received: "+msg);
+		return System.currentTimeMillis(); // for measuring latency
 	}
 
 	public void notyNewClient(String nickname) throws RemoteException {

@@ -4,9 +4,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +17,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	// Connecting to DB
 	private QueryExecutor qe;
-	String url="jdbc:postgresql://localhost/dbRdF";
+	String url="jdbc:postgresql://localhost/dbMessaging";
 	String usr="postgres";
 	String pwd="6357";
 
@@ -48,7 +48,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	public boolean signUp(MessagingClient mc, String nickname, String password) throws RemoteException {
 		try {
-			qe.addClientToDB(nickname, password);
+			qe.addClientToDB(nickname, password); // Come gestire gli admin?
 			notyNewClient(nickname);
 		} catch (SQLException e) {
 			System.err.println("Error while trying to register to DB");
@@ -80,38 +80,55 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		else return false;
 	}
 
-	public boolean sendMsg(String msg, String to) throws RemoteException {
+	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {
 		MessagingClient dest;
+		long receiveTime;
 		System.out.println("Server got message: "+msg);
 		if(logged.containsKey(to)) {
 			dest = logged.get(to);
-			dest.receiveMsg(msg); // metodo remoto del client
-			// add message to db as delivered = true;
-			return true;
+			receiveTime = dest.receiveMsg(msg); // metodo remoto del client
+			storeMessage(from, to, receiveTime-when, true, type); // add message to db as delivered = true;
+			return true; // messaggio ricevuto
 		}
-		// add message to db as delivered = false;
-		return false;
+		storeMessage(from, to, 0, false, type);// add message to db as delivered = false;
+		return false; // messaggio non ricevuto
 	}
 
-	public boolean sendMultiMessage(String msg, String... toClients) throws RemoteException {
+	/**
+	 * Send a broadcast message to all clients given as paramenters
+	 * @param msg The message to send
+	 * @param toClients All the receivers o f the Message
+	 * @return true if all messages succeded, false if there are messages not sended 
+	 */
+	public boolean sendMessage(String from, String msg, long when, String... toClients) throws RemoteException {
 		List<String> dests = Arrays.asList(toClients);
+		String type = dests.size()>1?"broadcast":"direct";
 		boolean errors = true;
 		for(String to:dests) {
-			if(!sendMsg(msg, to)) { // server.sendMsg(msg, to);
-				errors = false;
+			if(!sendMsg(from, msg, to, when, type)) { // server.sendMsg(msg, to);
+				errors = false; // almeno un messaggio non è stato ricevuto
 			}
 		}
 		return errors;
 	}
 
+	/**
+	 * Send a notification to all logged clients notifying the presence of a new subscribed client
+	 * @param newClient The new subscriber
+	 */
 	public void notyNewClient(String newClient) throws RemoteException {
 		Set<String> keys = logged.keySet();
 		for(String toNotify:keys) {
 			logged.get(toNotify).notyNewClient(newClient); // avvisa tutti i client loggati della presenza del nuovo client
-			//Aggiungere select query per avvisare client non loggati
+			//Aggiungere select query per avvisare client non loggati(forse non lo faccio)
 		}
 	}
 
+	/**
+	 * Logs out a client. The clients reference is removed from server.
+	 * @param nickname The logging out client.
+	 * @return true if the client is logged before try to logging out, else false.
+	 */
 	public boolean logOut(String nickname) throws RemoteException {
 		if(logged.containsKey(nickname)) {
 			logged.remove(nickname);
@@ -120,6 +137,11 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		return false;
 	}
 
+	/**
+	 * Delete the subscription of a client.
+	 * @param toKill the client to be unsubscribed
+	 * @return true if unsubscription succeded
+	 */
 	public boolean deleteSubscription(String toKill) throws RemoteException {
 		try {
 			qe.removeClientFromDB(toKill);
@@ -132,6 +154,10 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		return true;
 	}
 
+	/**
+	 * Send a notification to all logged clients to inform that a client has unsubscribed.
+	 * @param unsubscribedClient The unsubscribed client.
+	 */
 	public void notyUnsubscribedClient(String unsubscribedClient) throws RemoteException {
 		Set<String> keys = logged.keySet();
 		for(String toNotify:keys) {
@@ -140,13 +166,34 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
+	private boolean storeMessage(String nickName, String dest,  long latency, boolean delivered, String type) throws RemoteException {
+		try {
+			qe.addMessageToDB(nickName, dest, latency, delivered, type);
+		} catch (SQLException e) {
+			System.err.println("Message not stored on DB");
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/** Return the string representing the list of currently logged clients.
+	 * @return the string representing the list of currently logged clients.
+	 */
 	public String getLogged()throws RemoteException{
 		return logged.keySet().toString();
 	}
 
-	public int getRegisteredPerPeriod(Timestamp from, Timestamp to) throws RemoteException {
+	// For monitoring ------------------------------------------------------------------------
+	
+	/**
+	 * Retrieves from DB the number of clients who got subscribed in the given time interval.
+	 * @param from The lower bound for counting clients.
+	 * @param to The upper bound for counting clients.
+	 * @return The number of subscribed clients in the given time interval.
+	 */
+	public int getRegisteredPerPeriod(Date from, Date to) throws RemoteException {
 		try {
-			return qe.getElementsPerPeriod(from, to, "Client");
+			return qe.countElementsPerPeriod(from, to, "Client");
 		} catch (SQLException e) {
 			System.err.println("Error getting number of clients from DB in given time interval");
 			e.printStackTrace();
@@ -154,9 +201,15 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
-	public int getMsgsPerPeriod(Timestamp from, Timestamp to) throws RemoteException {
+	/**
+	 * Retrieves from DB the number of messages sent in the given time interval.
+	 * @param from The lower bound for counting messages.
+	 * @param to The upper bound for counting messages.
+	 * @return The number of messages sent in the given time interval.
+	 */
+	public int getMsgsPerPeriod(Date from, Date to) throws RemoteException {
 		try {
-			return qe.getElementsPerPeriod(from, to, "Msg");
+			return qe.countElementsPerPeriod(from, to, "Msg");
 		} catch (SQLException e) {
 			System.err.println("Error getting number of messages from DB in given time interval");
 			e.printStackTrace();
@@ -164,7 +217,13 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
-	public double getAvgLatencyPerPeriod(Timestamp from, Timestamp to) throws RemoteException {
+	/**
+	 * Retrieves from DB the avg of latency of sent messages in give time interval.
+	 * @param from The lower bound.
+	 * @param to The upper bound.
+	 * @return The avg of latency of sent messages in give time interval.
+	 */
+	public double getAvgLatencyPerPeriod(Date from, Date to) throws RemoteException {
 		try {
 			return qe.getAvgLatencyPerPeriod(from, to);
 		} catch (SQLException e) {
@@ -172,10 +231,5 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 			return -1;
 		}
-	}
-
-	public boolean storeMessage(ChatMessage cm) throws RemoteException {
-//		qe.addMessageToDB(nickname, dest, datasend, datareceive, delivered, type);
-		return false;
 	}
 }

@@ -36,7 +36,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 				while(!msg.equalsIgnoreCase("exit")) {
 					System.out.println("To: "+who);
 					msg = br.readLine();
-					server.sendMessage(c.getNick(), msg, System.nanoTime(), who); 
+					server.sendMessage(c.getNick(), msg, System.currentTimeMillis(), who); 
 				}
 			}
 		} catch (RemoteException e) {
@@ -68,7 +68,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 
 	public long receiveMsg(String msg) throws RemoteException {
 		System.out.println("Message received: "+msg);
-		return System.nanoTime(); // for measuring latency
+		return System.currentTimeMillis(); // for measuring latency
 	}
 
 	public void notyNewClient(String nickname) throws RemoteException {

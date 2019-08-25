@@ -1,16 +1,15 @@
 package com.messaging;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -125,13 +124,15 @@ public class QueryExecutor {
 
 	// DDQueryExecutor con parametro... aggiungere parametri e setX(..) corrispondenti per eseguire query parametriche
 	// Query methods for messaging system ----------------------------------------------------------
-	public void addClientToDB(String nickname, String password, boolean isAdmin) throws SQLException {
+	public void addClientToDB(String nickname, String password) throws SQLException {
 		PreparedStatement stmt = null;
+		Timestamp subTime = new Timestamp(0);
+		subTime.setTime(System.currentTimeMillis());
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[0]);
 			stmt.setString(1, nickname);
 			stmt.setString(2, password);
-			stmt.setBoolean(3, isAdmin);
+			stmt.setTimestamp(3, subTime);
 			stmt.executeUpdate();
 		}
 		catch(SQLException e) {	
@@ -143,17 +144,18 @@ public class QueryExecutor {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	public void addMessageToDB(String nickname, String dest, LocalDate date, long latency, boolean delivered, char type) throws SQLException {
+	public void addMessageToDB(String nickname, String dest, long latency, boolean delivered, String type) throws SQLException {
 		PreparedStatement stmt = null;
+		Timestamp sendTime = new Timestamp(0);
+		sendTime.setTime(System.currentTimeMillis());
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[1]);
 			stmt.setString(1, nickname);
 			stmt.setString(2, dest);
-			stmt.setDate(3, new Date(date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
+			stmt.setTimestamp(3, sendTime);
 			stmt.setLong(4, latency);
 			stmt.setBoolean(5, delivered);
-			stmt.setInt(6, type);
+			stmt.setString(6, type);
 			stmt.executeUpdate();
 		}
 		catch(SQLException e) {	
@@ -205,14 +207,17 @@ public class QueryExecutor {
 		return registered;
 	}
 
-	@SuppressWarnings("deprecation")
-	public double getAvgLatencyPerPeriod(LocalDate from, LocalDate to) throws SQLException {
+	public double getAvgLatencyPerPeriod(Date from, Date to) throws SQLException {
 		PreparedStatement stmt = null;
 		double avg = 0;
+		Timestamp before = new Timestamp(0);
+		before.setTime(from.getTime());
+		Timestamp after = new Timestamp(0);
+		after.setTime(to.getTime());
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.select_queries[5]);
-			stmt.setDate(1, new Date(from.getYear(), from.getMonthValue(), from.getDayOfMonth()));
-			stmt.setDate(2, new Date(to.getYear(), to.getMonthValue(), to.getDayOfMonth()));
+			stmt.setTimestamp(1, before);
+			stmt.setTimestamp(2, after);
 			ResultSet rs = stmt.executeQuery();
 
 			while(rs.next()) {
@@ -260,17 +265,20 @@ public class QueryExecutor {
 		return count;
 	}
 
-	@SuppressWarnings("deprecation")
-	public int countElementsPerPeriod(LocalDate from, LocalDate to, String what)throws SQLException {
+	public int countElementsPerPeriod(Date from, Date to, String what)throws SQLException {
 		PreparedStatement stmt = null;
 		int count = 0;
+		Timestamp before = new Timestamp(0);
+		before.setTime(from.getTime());
+		Timestamp after = new Timestamp(0);
+		after.setTime(to.getTime());
 		try {
 			if(what.equals("Client")) stmt = con.prepareStatement(PredefinedSQLCode.select_queries[3]);
 			else if(what.equals("Msg")) stmt = con.prepareStatement(PredefinedSQLCode.select_queries[4]);
 			else System.err.println("Don't know what to count");
 
-			stmt.setDate(1, new Date(from.getYear(), from.getMonthValue(), from.getDayOfMonth()));
-			stmt.setDate(2, new Date(to.getYear(), to.getMonthValue(), to.getDayOfMonth()));
+			stmt.setTimestamp(1, before);
+			stmt.setTimestamp(2, after);
 			ResultSet rs = stmt.executeQuery();
 
 			while(rs.next()) {
@@ -296,7 +304,7 @@ public class QueryExecutor {
 		Collection<User> result = new ArrayList<User>();
 		String nickName = null;
 		String pwd = null;
-		//		boolean isAdmin;
+		Timestamp sub = null;
 		Statement stmt = null;
 		try {
 			stmt = con.createStatement();
@@ -312,12 +320,12 @@ public class QueryExecutor {
 					case 2:
 						pwd = rs.getString(i);
 						break;
-						//					case 3:
-						//						isAdmin = rs.getBoolean(i);
-						//						break;
+					case 3:
+						sub = rs.getTimestamp(i);
+						break;
 					}
 				}
-					result.add(new User(nickName, pwd));
+					result.add(new User(nickName, pwd, sub));
 //				}
 			}
 		}
@@ -340,7 +348,7 @@ public class QueryExecutor {
 			Date dataSend = null;
 			long latency = 0;
 			boolean delivered = false;
-			char type = 0;
+			String type = null;
 			Statement stmt = null;
 			try {
 				stmt = con.createStatement();
@@ -357,7 +365,7 @@ public class QueryExecutor {
 							dest = rs.getString(i);
 							break;
 						case 3:
-							dataSend = rs.getDate(i);
+							dataSend = rs.getTimestamp(i);
 							break;
 						case 4:
 							latency = rs.getLong(i);
@@ -366,7 +374,7 @@ public class QueryExecutor {
 							delivered = rs.getBoolean(i);
 							break;
 						case 6:
-							type = (char)rs.getInt(i);
+							type = rs.getString(i);
 							break;
 						}
 					}

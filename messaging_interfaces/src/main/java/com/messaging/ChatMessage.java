@@ -1,10 +1,7 @@
 package com.messaging;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.sql.Date;
+import java.util.Date;
 
 public class ChatMessage implements Serializable{
 
@@ -15,26 +12,15 @@ public class ChatMessage implements Serializable{
 	private Date dataSend;
 	private long latency;
 	private boolean delivered;
-	private char type;
+	private String type;
 	
-	public ChatMessage(String from, String to, Date datasend, long latency, boolean delivered, char type) {
+	public ChatMessage(String from, String to, Date datasend, long latency, boolean delivered, String type) {
 		this.from = from;
 		this.to = to;
 		this.dataSend = datasend;
 		this.latency = latency;
 		this.delivered = delivered;
 		this.type = type;
-	}
-	
-	@SuppressWarnings("deprecation")
-	private Timestamp toTimestamp(LocalDateTime now) {
-		return new Timestamp(now.getYear(), 
-							now.getMonthValue(), 
-							now.getDayOfMonth(),
-							now.getHour(),
-							now.getMinute(),
-							now.getSecond(),
-							now.getNano());
 	}
 	
 	public Date getDataSend() {
@@ -61,11 +47,11 @@ public class ChatMessage implements Serializable{
 		this.delivered = delivered;
 	}
 
-	public char getType() {
+	public String getType() {
 		return type;
 	}
 
-	public void setType(char type) {
+	public void setType(String type) {
 		this.type = type;
 	}
 

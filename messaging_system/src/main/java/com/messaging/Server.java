@@ -4,8 +4,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,7 +17,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	// Connecting to DB
 	private QueryExecutor qe;
-	String url="jdbc:postgresql://localhost/dbRdF";
+	String url="jdbc:postgresql://localhost/dbMessaging";
 	String usr="postgres";
 	String pwd="6357";
 
@@ -50,7 +48,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	public boolean signUp(MessagingClient mc, String nickname, String password) throws RemoteException {
 		try {
-			qe.addClientToDB(nickname, password, false); // Come gestire gli admin?
+			qe.addClientToDB(nickname, password); // Come gestire gli admin?
 			notyNewClient(nickname);
 		} catch (SQLException e) {
 			System.err.println("Error while trying to register to DB");
@@ -82,17 +80,17 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		else return false;
 	}
 
-	private boolean sendMsg(String from, String msg, String to, long when, char type) throws RemoteException {
+	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {
 		MessagingClient dest;
 		long receiveTime;
 		System.out.println("Server got message: "+msg);
 		if(logged.containsKey(to)) {
 			dest = logged.get(to);
 			receiveTime = dest.receiveMsg(msg); // metodo remoto del client
-			storeMessage(from, to, true, receiveTime-when, type); // add message to db as delivered = true;
+			storeMessage(from, to, receiveTime-when, true, type); // add message to db as delivered = true;
 			return true; // messaggio ricevuto
 		}
-		storeMessage(from, to, false, 0, type);// add message to db as delivered = false;
+		storeMessage(from, to, 0, false, type);// add message to db as delivered = false;
 		return false; // messaggio non ricevuto
 	}
 
@@ -104,7 +102,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 */
 	public boolean sendMessage(String from, String msg, long when, String... toClients) throws RemoteException {
 		List<String> dests = Arrays.asList(toClients);
-		char type = dests.size()>1?'b':'d';
+		String type = dests.size()>1?"broadcast":"direct";
 		boolean errors = true;
 		for(String to:dests) {
 			if(!sendMsg(from, msg, to, when, type)) { // server.sendMsg(msg, to);
@@ -168,9 +166,9 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
-	private boolean storeMessage(String nickName, String dest, boolean delivered, long latency, char type) throws RemoteException {
+	private boolean storeMessage(String nickName, String dest,  long latency, boolean delivered, String type) throws RemoteException {
 		try {
-			qe.addMessageToDB(nickName, dest, LocalDate.now(), latency, delivered, type);
+			qe.addMessageToDB(nickName, dest, latency, delivered, type);
 		} catch (SQLException e) {
 			System.err.println("Message not stored on DB");
 			e.printStackTrace();
@@ -193,7 +191,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param to The upper bound for counting clients.
 	 * @return The number of subscribed clients in the given time interval.
 	 */
-	public int getRegisteredPerPeriod(LocalDate from, LocalDate to) throws RemoteException {
+	public int getRegisteredPerPeriod(Date from, Date to) throws RemoteException {
 		try {
 			return qe.countElementsPerPeriod(from, to, "Client");
 		} catch (SQLException e) {
@@ -209,7 +207,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param to The upper bound for counting messages.
 	 * @return The number of messages sent in the given time interval.
 	 */
-	public int getMsgsPerPeriod(LocalDate from, LocalDate to) throws RemoteException {
+	public int getMsgsPerPeriod(Date from, Date to) throws RemoteException {
 		try {
 			return qe.countElementsPerPeriod(from, to, "Msg");
 		} catch (SQLException e) {
@@ -225,7 +223,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param to The upper bound.
 	 * @return The avg of latency of sent messages in give time interval.
 	 */
-	public double getAvgLatencyPerPeriod(LocalDate from, LocalDate to) throws RemoteException {
+	public double getAvgLatencyPerPeriod(Date from, Date to) throws RemoteException {
 		try {
 			return qe.getAvgLatencyPerPeriod(from, to);
 		} catch (SQLException e) {

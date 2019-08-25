@@ -1,18 +1,17 @@
 package com.messaging;
 
-import java.io.Serializable;
+import java.util.Date;
 
-public class User implements Serializable, Cloneable{
-
-	private static final long serialVersionUID = 1L;
+public class User{
 	
 	private String nickName;
 	private String password;
-	private boolean isAdmin;
+	private Date subscription;
 	
-	public User(String nickName, String pwd) {
+	public User(String nickName, String pwd, Date subscription) {
 		this.nickName = nickName;
 		this.password = pwd;
+		this.subscription = subscription;
 	}
 	
 	public String getNickName() {
@@ -30,22 +29,12 @@ public class User implements Serializable, Cloneable{
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
-	public boolean isAdmin() {
-		return isAdmin;
-	}
-
-	public void setAdmin(boolean isAdmin) {
-		this.isAdmin = isAdmin;
-	}
 	
-	@Override
-	public String toString() {
-		return nickName;
+	public Date getSubDate() {
+		return subscription;
 	}
-	
-	@Override
-	public User clone() throws CloneNotSupportedException {
-		return (User) super.clone();
+
+	public void setSubDate(Date subscription) {
+		this.subscription = subscription;
 	}
 }

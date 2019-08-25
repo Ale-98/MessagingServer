@@ -72,12 +72,17 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			mc.infoMsg("Error retriving registered users from DB");
 			e.printStackTrace();
 		}
-		// fare select query per vedere se nickname è presente in database
 		if(registered.contains(nickname)) {
 			logged.put(nickname, mc); // memorizza mc localmente in mappa utenti connessi
+			sendPendantMessagesIfThereAre();
 			return true;
 		}
 		else return false;
+	}
+
+	private void sendPendantMessagesIfThereAre() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {

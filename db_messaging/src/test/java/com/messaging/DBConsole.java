@@ -20,7 +20,7 @@ public class DBConsole extends JFrame{
 	private JLabel inputIndex, outputIndex;
 
 	// Logging into DB
-	String url="jdbc:postgresql://localhost/postgres";
+	String url="jdbc:postgresql://localhost/dbMessaging";
 	String usr="postgres";
 	String pwd="6357";
 
@@ -84,7 +84,7 @@ public class DBConsole extends JFrame{
 
 		String result = "";
 		try {
-			QueryExecutor qe = new QueryExecutor(url, usr, pwd);
+			QueryExecutor qe = QueryExecutor.getInstance(url, usr, pwd);
 			StringTokenizer stk = new StringTokenizer(query, " ");
 			String type = stk.nextToken();
 			if(type.equals("create")||type.equals("drop")) {

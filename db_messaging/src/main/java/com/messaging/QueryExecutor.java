@@ -41,9 +41,13 @@ public class QueryExecutor {
 	}
 
 	// The builder
-	public QueryExecutor(String url, String usr, String pwd) throws SQLException{
+	private QueryExecutor(String url, String usr, String pwd) throws SQLException{
 		con=openConnection(url,usr,pwd);
 		System.out.println("Connesso al db "+con.getCatalog());
+		// init DB
+		Statement stmt = con.createStatement();
+		stmt.executeUpdate(PredefinedSQLCode.create_table_queries[0]);
+		stmt.executeUpdate(PredefinedSQLCode.create_table_queries[1]);
 	}
 
 	// Singleton pattern
@@ -136,7 +140,7 @@ public class QueryExecutor {
 			stmt.executeUpdate();
 		}
 		catch(SQLException e) {	
-			//			e.printStackTrace();
+			e.printStackTrace();
 			printSQLException(e);
 		}
 		finally {	
@@ -144,18 +148,19 @@ public class QueryExecutor {
 		}
 	}
 
-	public void addMessageToDB(String nickname, String dest, long latency, boolean delivered, String type) throws SQLException {
+	public void addMessageToDB(String nickname, String text, String dest, long latency, boolean delivered, String type) throws SQLException {
 		PreparedStatement stmt = null;
 		Timestamp sendTime = new Timestamp(0);
 		sendTime.setTime(System.currentTimeMillis());
 		try {
 			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[1]);
 			stmt.setString(1, nickname);
-			stmt.setString(2, dest);
-			stmt.setTimestamp(3, sendTime);
-			stmt.setLong(4, latency);
-			stmt.setBoolean(5, delivered);
-			stmt.setString(6, type);
+			stmt.setString(2, text);
+			stmt.setString(3, dest);
+			stmt.setTimestamp(4, sendTime);
+			stmt.setLong(5, latency);
+			stmt.setBoolean(6, delivered);
+			stmt.setString(7, type);
 			stmt.executeUpdate();
 		}
 		catch(SQLException e) {	
@@ -165,6 +170,51 @@ public class QueryExecutor {
 		finally {	
 			if(stmt!=null) stmt.close();
 		}
+	}
+
+	public List<String> getPendantMessages(String nickname) throws SQLException {
+		List<String> pendants = new ArrayList<String>();
+		PreparedStatement stmt = null;
+		try {
+			stmt = con.prepareStatement(PredefinedSQLCode.select_queries[6]);
+			stmt.setString(1, nickname);
+			ResultSet rs = stmt.executeQuery();
+
+			while(rs.next()) {
+				int numCol = rs.getMetaData().getColumnCount();
+				String row = "";
+				for(int i = 1; i<=numCol; i++) {
+					String cell = "";
+					switch(i) {
+					case 1:
+					case 2:
+					case 3:
+						cell = rs.getString(i);
+						break;
+					case 4:
+						cell = cell +""+ rs.getTimestamp(i).toString();
+						break;
+					}
+					row=row+cell+"\t";
+				}
+				pendants.add(row);
+			}
+		}
+		catch(SQLException e) {	
+			e.printStackTrace();
+			printSQLException(e);
+		}
+		finally {	
+			if(stmt!=null) stmt.close();
+		}
+		return pendants;
+	}
+	
+	public void updatePendants(String nickname) throws SQLException {
+		PreparedStatement stmt = null;
+		stmt = con.prepareStatement(PredefinedSQLCode.update_queries[0]);
+		stmt.setString(1,  nickname);
+		stmt.executeUpdate();
 	}
 
 	public void removeClientFromDB(String nickname) throws SQLException {
@@ -325,8 +375,8 @@ public class QueryExecutor {
 						break;
 					}
 				}
-					result.add(new User(nickName, pwd, sub));
-//				}
+				result.add(new User(nickName, pwd, sub));
+				//				}
 			}
 		}
 		catch(SQLException e) {	
@@ -340,59 +390,59 @@ public class QueryExecutor {
 	}
 
 	// For MainView textFiltering by nickname
-		public Collection<ChatMessage> findAllMsgs() throws SQLException{
+	public Collection<ChatMessage> findAllMsgs() throws SQLException{
 
-			Collection<ChatMessage> result = new ArrayList<ChatMessage>();
-			String nickName = null;
-			String dest = null;
-			Date dataSend = null;
-			long latency = 0;
-			boolean delivered = false;
-			String type = null;
-			Statement stmt = null;
-			try {
-				stmt = con.createStatement();
-				ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
+		Collection<ChatMessage> result = new ArrayList<ChatMessage>();
+		String nickName = null;
+		String dest = null;
+		Date dataSend = null;
+		long latency = 0;
+		boolean delivered = false;
+		String type = null;
+		Statement stmt = null;
+		try {
+			stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
 
-				while(rs.next()) {
-					int numCol = rs.getMetaData().getColumnCount();
-					for(int i = 1; i<=numCol; i++) {
-						switch(i) {
-						case 1:
-							nickName = rs.getString(i);
-							break;
-						case 2:
-							dest = rs.getString(i);
-							break;
-						case 3:
-							dataSend = rs.getTimestamp(i);
-							break;
-						case 4:
-							latency = rs.getLong(i);
-							break;
-						case 5:
-							delivered = rs.getBoolean(i);
-							break;
-						case 6:
-							type = rs.getString(i);
-							break;
-						}
+			while(rs.next()) {
+				int numCol = rs.getMetaData().getColumnCount();
+				for(int i = 1; i<=numCol; i++) {
+					switch(i) {
+					case 1:
+						nickName = rs.getString(i);
+						break;
+					case 2:
+						dest = rs.getString(i);
+						break;
+					case 3:
+						dataSend = rs.getTimestamp(i);
+						break;
+					case 4:
+						latency = rs.getLong(i);
+						break;
+					case 5:
+						delivered = rs.getBoolean(i);
+						break;
+					case 6:
+						type = rs.getString(i);
+						break;
 					}
-						result.add(new ChatMessage(nickName, dest, dataSend, latency, delivered, type));
-//					}
 				}
+				result.add(new ChatMessage(nickName, dest, dataSend, latency, delivered, type));
+				//					}
 			}
-			catch(SQLException e) {	
-				e.printStackTrace();
-				printSQLException(e);
-			}
-			finally {	
-				if(stmt!=null) stmt.close();
-			}
-			return result;
 		}
+		catch(SQLException e) {	
+			e.printStackTrace();
+			printSQLException(e);
+		}
+		finally {	
+			if(stmt!=null) stmt.close();
+		}
+		return result;
+	}
 
-	
+
 	// Test & Maintenance
 	// Per interfaccia server-->manutenzione DB
 	public String chooseAndExecuteQuery(String query) {
@@ -414,26 +464,6 @@ public class QueryExecutor {
 		}
 		return result;
 	}
-
-	// da togliere
-	public boolean insertDate(Date data) throws SQLException {
-		PreparedStatement stmt = null;
-		try {
-			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[2]);
-			stmt.setDate(1, (java.sql.Date) data);
-			stmt.executeUpdate();
-		}
-		catch(SQLException e) {	
-			e.printStackTrace();
-			printSQLException(e);
-			return false;
-		}
-		finally {	
-			if(stmt!=null) stmt.close();
-		}
-		return true;
-	}
-
 }
 
 

@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 public class Server extends UnicastRemoteObject implements MessagingServer, MonitoringServer{
 
@@ -27,7 +28,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	protected Server() throws RemoteException {
 		super();
 		try {
-			qe = new QueryExecutor(url, usr, pwd);
+			qe = QueryExecutor.getInstance(url, usr, pwd);
 		} catch (SQLException e) {
 			System.err.println("Error connecing to db");
 			e.printStackTrace();
@@ -74,15 +75,32 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 		if(registered.contains(nickname)) {
 			logged.put(nickname, mc); // memorizza mc localmente in mappa utenti connessi
-			sendPendantMessagesIfThereAre();
+			sendPendantMessagesIfThereAre(mc, nickname);
 			return true;
 		}
 		else return false;
 	}
 
-	private void sendPendantMessagesIfThereAre() {
-		// TODO Auto-generated method stub
-		
+	private void sendPendantMessagesIfThereAre(MessagingClient mc, String nickname) throws RemoteException {
+		try {
+			List<String> pendants = qe.getPendantMessages(nickname);
+			if(pendants.size()>0) {
+				StringTokenizer stk;
+				String from, text, to, datasend;
+				for(String msg:pendants) {
+					stk = new StringTokenizer(msg, "\t");
+					from = stk.nextToken();
+					text = stk.nextToken();
+					to = stk.nextToken();
+					datasend = stk.nextToken();
+					mc.receiveMsg(text);
+				}
+				qe.updatePendants(nickname);
+			}
+		} catch (SQLException e) {
+			System.err.println("Error retrieving pendant messages from DB");
+			e.printStackTrace();
+		}
 	}
 
 	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {
@@ -92,10 +110,10 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		if(logged.containsKey(to)) {
 			dest = logged.get(to);
 			receiveTime = dest.receiveMsg(msg); // metodo remoto del client
-			storeMessage(from, to, receiveTime-when, true, type); // add message to db as delivered = true;
+			storeMessage(from, msg, to, receiveTime-when, true, type); // add message to db as delivered = true;
 			return true; // messaggio ricevuto
 		}
-		storeMessage(from, to, 0, false, type);// add message to db as delivered = false;
+		storeMessage(from, msg, to, 0, false, type);// add message to db as delivered = false;
 		return false; // messaggio non ricevuto
 	}
 
@@ -171,16 +189,16 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 
-	private boolean storeMessage(String nickName, String dest,  long latency, boolean delivered, String type) throws RemoteException {
+	private boolean storeMessage(String nickName, String text, String dest,  long latency, boolean delivered, String type) throws RemoteException {
 		try {
-			qe.addMessageToDB(nickName, dest, latency, delivered, type);
+			qe.addMessageToDB(nickName, text, dest, latency, delivered, type);
 		} catch (SQLException e) {
 			System.err.println("Message not stored on DB");
 			e.printStackTrace();
 		}
 		return false;
 	}
-	
+
 	/** Return the string representing the list of currently logged clients.
 	 * @return the string representing the list of currently logged clients.
 	 */
@@ -189,7 +207,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	}
 
 	// For monitoring ------------------------------------------------------------------------
-	
+
 	/**
 	 * Retrieves from DB the number of clients who got subscribed in the given time interval.
 	 * @param from The lower bound for counting clients.

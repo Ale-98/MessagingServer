@@ -132,19 +132,16 @@ public class QueryExecutor {
 		PreparedStatement stmt = null;
 		Timestamp subTime = new Timestamp(0);
 		subTime.setTime(System.currentTimeMillis());
+
+		stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[0]);
+		stmt.setString(1, nickname);
+		stmt.setString(2, password);
+		stmt.setTimestamp(3, subTime);
+		stmt.executeUpdate();
 		try {
-			stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[0]);
-			stmt.setString(1, nickname);
-			stmt.setString(2, password);
-			stmt.setTimestamp(3, subTime);
-			stmt.executeUpdate();
-		}
-		catch(SQLException e) {	
-			e.printStackTrace();
-			printSQLException(e);
-		}
-		finally {	
-			if(stmt!=null) stmt.close();
+		if(stmt!=null) stmt.close();
+		}catch(SQLException e) {
+			System.err.println("Statement not closed");
 		}
 	}
 
@@ -209,12 +206,18 @@ public class QueryExecutor {
 		}
 		return pendants;
 	}
-	
+
 	public void updatePendants(String nickname) throws SQLException {
 		PreparedStatement stmt = null;
 		stmt = con.prepareStatement(PredefinedSQLCode.update_queries[0]);
 		stmt.setString(1,  nickname);
 		stmt.executeUpdate();
+		try {
+			if(stmt!=null) stmt.close();
+		}catch(SQLException e) {
+			e.printStackTrace();
+			printSQLException(e);
+		}
 	}
 
 	public void removeClientFromDB(String nickname) throws SQLException {

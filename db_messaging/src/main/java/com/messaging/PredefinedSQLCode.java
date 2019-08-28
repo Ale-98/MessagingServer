@@ -59,7 +59,7 @@ public class PredefinedSQLCode {
 
 	public static final String update_queries[] = {
 			
-			"update message set delivered = true where dest = '?' and delivered = false"
+			"update message set delivered = true where dest = ? and delivered = false"
 			
 	};
 }

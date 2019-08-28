@@ -6,6 +6,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,13 +35,13 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			Registry reg = LocateRegistry.createRegistry(1099);
 			connectToDB(url, usr, cs);
 			reg.rebind("MessagingServer", this);
-			System.out.println("Server bounded");
+			debugUI.showInDebugWindow("Server bounded");
 		} catch (RemoteException e) {
-			System.err.println("Server not bounded");
+			debugUI.showInDebugWindow("Server not bounded");
 			e.printStackTrace();
 		}
 	}
-
+	
 	// Connects to DB
 	private void connectToDB(String url, String usr, char[] cs) {
 		String pwd = "";
@@ -50,7 +51,8 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			qe = QueryExecutor.getInstance(url, usr, pwd);
 		} catch (SQLException e) {
-			System.err.println("Error connecing to db");
+			debugUI.showInDebugWindow("Error connecting to db");
+			debugUI.showErrorNotification();
 			e.printStackTrace();
 		}
 	}
@@ -60,6 +62,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			UnicastRemoteObject.unexportObject(this, true);
 		} catch (NoSuchObjectException e) {
+			debugUI.showInDebugWindow("Error: Server not stopped");
 			e.printStackTrace();
 		}
 	}
@@ -92,12 +95,12 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		} catch (SQLException e) {
 			debugUI.showInDebugWindow("Error while trying to register to DB");
 			mc.infoMsg("Error while trying to register to DB");
-			debugUI.showInDebugWindow("Client already in DB");
-			mc.infoMsg("Client already in DB");
+			debugUI.showInDebugWindow("Client "+nickname+" already in DB");
+			mc.infoMsg("Client "+nickname+" already in DB");
 			e.printStackTrace();
 			signIn(mc, nickname); // Se già presente in DB fa signIn ma ritorna false
-			debugUI.showInDebugWindow("Client signed-In");
-			mc.infoMsg("Client signed-In");
+			debugUI.showInDebugWindow("Client "+nickname+" signed-In");
+			mc.infoMsg("Client "+nickname+" signed-In");
 			return false;
 		} 
 		signIn(mc, nickname); // Se non presente in DB si aggiunge a DB e ritorna true
@@ -160,7 +163,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {
 		MessagingClient dest;
 		long receiveTime;
-		System.out.println("Server got message: "+msg);
+		debugUI.showInDebugWindow("Server got message from "+from+": "+msg);
 		if(logged.containsKey(to)) {
 			dest = logged.get(to);
 			receiveTime = dest.receiveMsg(msg); // metodo remoto del client
@@ -173,7 +176,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	/**
 	 * Send a broadcast or a direct message to all clients given as paramenters
-	 * @param from Who has sent the message
+	 * @param from Who has sent the message(nickname)
 	 * @param msg The message to send
 	 * @param when The instant in which the message has been sent
 	 * @param toClients All the receivers of the Message
@@ -185,7 +188,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		String type = dests.size()>1?"broadcast":"direct";
 		boolean errors = true;
 		for(String to:dests) {
-			if(!sendMsg(from, msg, to, when, type)) { // server.sendMsg(msg, to);
+			if(!sendMsg(from, msg, to, when, type)) { 
 				errors = false; // almeno un messaggio non è stato ricevuto
 			}
 		}
@@ -264,8 +267,8 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @return the string representing the list of currently logged clients.
 	 * @throws RemoteException in case of network issues
 	 */
-	public Set<String> getLogged()throws RemoteException{
-		return logged.keySet();
+	public List<String> getLogged()throws RemoteException{
+		return new ArrayList<String>(logged.keySet());
 	}
 
 	// For monitoring ------------------------------------------------------------------------

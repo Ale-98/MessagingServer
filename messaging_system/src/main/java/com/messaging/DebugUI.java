@@ -5,10 +5,10 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
@@ -24,9 +24,17 @@ public class DebugUI extends JFrame {
 	private JLabel debug;
 	private JTextArea debugWindow;
 	private JButton stopServer;
+	private JButton clearConsole;
 
+	private Server theServer;
+	
 	public void showInDebugWindow(String text) {
 		debugWindow.setText(debugWindow.getText()+text+"\n");
+	}
+	
+	public void showErrorNotification() {
+		new JOptionPane("User or password invalid:"
+						+"Stop server and restart it");
 	}
 	
 	public DebugUI() {
@@ -48,7 +56,12 @@ public class DebugUI extends JFrame {
 		stopServer.addActionListener(new StopButtonHandler());
 		stopServer.setPreferredSize(buttonDimension);
 		con.add(stopServer);
-
+		
+		clearConsole = new JButton("Clear Console");
+		clearConsole.addActionListener(new ClearButtonHandler());
+		clearConsole.setPreferredSize(buttonDimension);
+		con.add(clearConsole);
+		
 		setVisible(true);
 		setSize(30*11, 30*15);
 	}
@@ -56,10 +69,18 @@ public class DebugUI extends JFrame {
 	private class StopButtonHandler implements ActionListener {
 
 		public void actionPerformed(ActionEvent e) {
-//			theServer.stopServer();
-			debugWindow.setText("Stop btn pressed");
+			theServer = ServerUI.getServer();
+			theServer.stopServer();
+			debugWindow.setText("Server stopped");
 		}
+	}
+	
+	private class ClearButtonHandler implements ActionListener {
 
+		public void actionPerformed(ActionEvent e) {
+			debugWindow.setText("");
+		}
+		
 	}
 	
 }

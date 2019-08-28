@@ -3,7 +3,7 @@ package com.messaging;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
 public interface MonitoringServer extends Remote{
 
@@ -13,7 +13,7 @@ public interface MonitoringServer extends Remote{
 	 * @return the string representing the list of currently logged clients.
 	 * @throws RemoteException in case of network issues
 	 */
-	public Set<String> getLogged()throws RemoteException;
+	public List<String> getLogged()throws RemoteException;
 	
 	/** Returns the number of clients currently bounded in DB
 	 * @return the number of clients currently bounded in DB

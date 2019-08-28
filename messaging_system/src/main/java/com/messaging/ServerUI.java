@@ -10,19 +10,14 @@ import java.rmi.RemoteException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.plaf.SeparatorUI;
 
 public class ServerUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private Server theServer;
+	private static Server theServer;
 
 	private static final int BUTTON_VERTICAL_SIZE = 30;
 	private static final int BUTTON_HORIZONTAL_SIZE = 150;
@@ -34,6 +29,10 @@ public class ServerUI extends JFrame {
 	private JPasswordField pwdField;
 	private JButton start;
 
+	public static Server getServer() {
+		return theServer;
+	}
+	
 	public ServerUI() {
 		super("ServerUI");
 

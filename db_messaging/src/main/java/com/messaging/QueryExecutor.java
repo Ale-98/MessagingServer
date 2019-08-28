@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 public class QueryExecutor {
 

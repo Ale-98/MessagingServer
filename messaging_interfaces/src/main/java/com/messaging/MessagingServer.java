@@ -3,7 +3,6 @@ package com.messaging;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.Set;
 
 public interface MessagingServer extends Remote{
 
@@ -58,6 +57,6 @@ public interface MessagingServer extends Remote{
 	 * @return the string representing the list of currently logged clients.
 	 * @throws RemoteException in case of network issues
 	 */
-	public Set<String> getLogged()throws RemoteException;
+	public List<String> getLogged()throws RemoteException;
 	
 }

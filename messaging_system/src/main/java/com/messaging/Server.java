@@ -90,13 +90,13 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			qe.addClientToDB(nickname, password); // Come gestire gli admin?
 			notyNewClient(nickname);
 		} catch (SQLException e) {
-			System.err.println("Error while trying to register to DB");
+			debugUI.showInDebugWindow("Error while trying to register to DB");
 			mc.infoMsg("Error while trying to register to DB");
-			System.err.println("Client already in DB");
+			debugUI.showInDebugWindow("Client already in DB");
 			mc.infoMsg("Client already in DB");
 			e.printStackTrace();
 			signIn(mc, nickname); // Se già presente in DB fa signIn ma ritorna false
-			System.err.println("Client signed-In");
+			debugUI.showInDebugWindow("Client signed-In");
 			mc.infoMsg("Client signed-In");
 			return false;
 		} 
@@ -104,12 +104,19 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		return true;
 	}
 
+	/**
+	 * Used by logIn form to add a client to the currently logged In clients' list.
+	 * @param mc The remote reference to the client to signIn.
+	 * @param nickname The new logged client's nickname.
+	 * @retun true if the client is bounded into DB, else false.
+	 * @throws RemoteException in case of network issues
+	 */
 	public boolean signIn(MessagingClient mc, String nickname) throws RemoteException {
 		List<String> registered = null;
 		try {
 			registered = qe.getRegisteredClients();
 		} catch (SQLException e) {
-			System.err.println("Error retriving registered users from DB");
+			debugUI.showInDebugWindow("Error retriving registered users from DB");
 			mc.infoMsg("Error retriving registered users from DB");
 			e.printStackTrace();
 		}
@@ -139,12 +146,12 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 				try {
 					qe.updatePendants(nickname);
 				}catch(SQLException ex) {
-					System.err.println("Error updating pendant messages state");
+					debugUI.showInDebugWindow("Error updating pendant messages state");
 					ex.printStackTrace();
 				}
 			}
 		} catch (SQLException e) {
-			System.err.println("Error retrieving pendant messages from DB");
+			debugUI.showInDebugWindow("Error retrieving pendant messages from DB");
 			e.printStackTrace();
 		}
 	}
@@ -190,18 +197,17 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param newClient The new subscriber
 	 * @throws RemoteException in case of network issues
 	 */
-	public void notyNewClient(String newClient) throws RemoteException {
+	private void notyNewClient(String newClient) throws RemoteException {
 		Set<String> keys = logged.keySet();
 		for(String toNotify:keys) {
 			logged.get(toNotify).notyNewClient(newClient); // avvisa tutti i client loggati della presenza del nuovo client
-			//Aggiungere select query per avvisare client non loggati(forse non lo faccio)
 		}
 	}
 
 	/**
 	 * Logs out a client. The clients reference is removed from server.
 	 * @param nickname The logging out client.
-	 * @return true if the client is logged before try to logging out, else false.
+	 * @return true if the client is logged before trying to logging out, else false.
 	 * @throws RemoteException in case of network issues
 	 */
 	public boolean logOut(String nickname) throws RemoteException {
@@ -221,8 +227,9 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	public boolean deleteSubscription(String toKill) throws RemoteException {
 		try {
 			qe.removeClientFromDB(toKill);
+			notyUnsubscribedClient(toKill);
 		} catch (SQLException e) {
-			System.err.println("Error trying to delete subscription of: "+logged.get(toKill));
+			debugUI.showInDebugWindow("Error trying to delete subscription of: "+logged.get(toKill));
 			logged.get(toKill).infoMsg("Error trying to delete your subscription");
 			e.printStackTrace();
 			return false;
@@ -235,11 +242,10 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param unsubscribedClient The unsubscribed client.
 	 * @throws RemoteException in case of network issues
 	 */
-	public void notyUnsubscribedClient(String unsubscribedClient) throws RemoteException {
+	private void notyUnsubscribedClient(String unsubscribedClient) throws RemoteException {
 		Set<String> keys = logged.keySet();
 		for(String toNotify:keys) {
 			logged.get(toNotify).notyUnsubscribedClient(unsubscribedClient); // avvisa tutti i client loggati della presenza del nuovo client
-			//Aggiungere select query per avvisare client non loggati
 		}
 	}
 
@@ -248,22 +254,48 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			qe.addMessageToDB(nickName, text, dest, latency, delivered, type);
 		} catch (SQLException e) {
-			System.err.println("Message not stored on DB");
+			debugUI.showInDebugWindow("Message not stored on DB");
 			e.printStackTrace();
 		}
 		return false;
 	}
 
-	/** Return the string representing the list of currently logged clients.
+	/** Returns the list of currently logged clients.
 	 * @return the string representing the list of currently logged clients.
 	 * @throws RemoteException in case of network issues
 	 */
-	public String getLogged()throws RemoteException{
-		return logged.keySet().toString();
+	public Set<String> getLogged()throws RemoteException{
+		return logged.keySet();
 	}
 
 	// For monitoring ------------------------------------------------------------------------
 
+	/** Returns the number of clients currently bounded in DB
+	 * @return the number of clients currently bounded in DB
+	 */
+	public int getRegistered() throws RemoteException {
+		try {
+			return qe.countElements("Client");
+		} catch (SQLException e) {
+			debugUI.showInDebugWindow("Error getting current number of clients from DB");
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
+	/**
+	 * Returns the number of messages currently bounded in DB
+	 * @return the number of messages currently bounded in DB
+	 */
+	public int getMessages() throws RemoteException {
+		try {
+			return qe.countElements("Msg");
+		} catch (SQLException e) {
+			debugUI.showInDebugWindow("Error getting current number of clients from DB");
+			e.printStackTrace();
+			return -1;
+		}
+	}
 	/**
 	 * Retrieves from DB the number of clients who got subscribed in the given time interval.
 	 * @param from The lower bound for counting clients.
@@ -275,7 +307,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			return qe.countElementsPerPeriod(from, to, "Client");
 		} catch (SQLException e) {
-			System.err.println("Error getting number of clients from DB in given time interval");
+			debugUI.showInDebugWindow("Error getting number of clients from DB in given time interval");
 			e.printStackTrace();
 			return -1;
 		}
@@ -292,7 +324,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			return qe.countElementsPerPeriod(from, to, "Msg");
 		} catch (SQLException e) {
-			System.err.println("Error getting number of messages from DB in given time interval");
+			debugUI.showInDebugWindow("Error getting number of messages from DB in given time interval");
 			e.printStackTrace();
 			return -1;
 		}
@@ -309,7 +341,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		try {
 			return qe.getAvgLatencyPerPeriod(from, to);
 		} catch (SQLException e) {
-			System.out.println("Error getting avg latency of messages from db in given time interval");
+			debugUI.showInDebugWindow("Error getting avg latency of messages from db in given time interval");
 			e.printStackTrace();
 			return -1;
 		}

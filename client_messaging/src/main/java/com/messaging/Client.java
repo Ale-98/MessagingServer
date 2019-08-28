@@ -30,7 +30,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 			String who = "";
 			while(!msg.equals("exit")) {
 				System.out.println("A chi vuoi mandare un messaggio?");
-				System.out.println("Utenti loggati: "+server.getLogged());
+				System.out.println("Utenti loggati: "+server.getLogged().toString());
 				who = br.readLine();
 				System.out.println("Connesso con "+who);
 				while(!msg.equalsIgnoreCase("exit")) {

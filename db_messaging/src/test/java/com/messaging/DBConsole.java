@@ -88,10 +88,10 @@ public class DBConsole extends JFrame{
 			StringTokenizer stk = new StringTokenizer(query, " ");
 			String type = stk.nextToken();
 			if(type.equals("create")||type.equals("drop")) {
-				qe.execute_DD_query(query);
+//				qe.execute_DD_query(query);
 			}
 			else if(type.equals("select")) {
-				result = qe.execute_SEL_query(query);
+//				result = qe.execute_SEL_query(query);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

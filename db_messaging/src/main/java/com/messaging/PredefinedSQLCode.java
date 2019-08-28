@@ -44,7 +44,7 @@ public class PredefinedSQLCode {
 			"select count(*) from message",
 			"select count(*) from client where subdate between ? and ?",
 			"select count(*) from message where datasend between ? and ?",
-			"select avg(latency_ms) from message where datasend between ? and ?",
+			"select avg(latency_ms) from message where latency_ms != 0 and datasend between ? and ?",
 			"select nickname, text, dest, datasend from message where dest = ? and delivered = false",
 			"select * from client",
 			"select * from message"

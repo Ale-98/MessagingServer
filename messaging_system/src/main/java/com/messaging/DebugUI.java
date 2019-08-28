@@ -25,6 +25,10 @@ public class DebugUI extends JFrame {
 	private JTextArea debugWindow;
 	private JButton stopServer;
 
+	public void showInDebugWindow(String text) {
+		debugWindow.setText(debugWindow.getText()+text+"\n");
+	}
+	
 	public DebugUI() {
 		super("DebugUI");
 

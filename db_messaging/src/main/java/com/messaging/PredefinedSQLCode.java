@@ -15,7 +15,7 @@ public class PredefinedSQLCode {
 			+"text varchar(100) not null,"
 			+"dest varchar(30) not null,"  
 			+"datasend timestamp,"
-			+"latency_ms numeric not null,"
+			+"latency numeric not null,"
 			+"delivered boolean not null,"
 			+"type varchar(10) not null check(type in('direct', 'broadcast'))," 
 			+"primary key(nickname, datasend)" 
@@ -33,7 +33,7 @@ public class PredefinedSQLCode {
 	public static final String insert_table_queries[] = {
 
 			"insert into client(nickname, password, subdate) values(?, ?, ?)", //query parametrica
-			"insert into message(nickname, text, dest, datasend, latency_ms, delivered, type) values(?, ?, ?, ?, ?, ?, ?)"
+			"insert into message(nickname, text, dest, datasend, latency, delivered, type) values(?, ?, ?, ?, ?, ?, ?)"
 
 	};
 
@@ -44,7 +44,7 @@ public class PredefinedSQLCode {
 			"select count(*) from message",
 			"select count(*) from client where subdate between ? and ?",
 			"select count(*) from message where datasend between ? and ?",
-			"select avg(latency_ms) from message where latency_ms != 0 and datasend between ? and ?",
+			"select avg(latency) from message where latency != 0 and datasend between ? and ?",
 			"select nickname, text, dest, datasend from message where dest = ? and delivered = false",
 			"select * from client",
 			"select * from message"

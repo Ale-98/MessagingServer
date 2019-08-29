@@ -63,8 +63,7 @@ public class QueryExecutor {
 	// Query methods for messaging system ----------------------------------------------------------
 	public synchronized void addClientToDB(String nickname, String password) throws SQLException {
 		PreparedStatement stmt = null;
-		Timestamp subTime = new Timestamp(0);
-		subTime.setTime(System.currentTimeMillis());
+		Timestamp subTime = new Timestamp(System.currentTimeMillis());
 
 		stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[0]);
 		stmt.setString(1, nickname);
@@ -81,15 +80,14 @@ public class QueryExecutor {
 
 	public synchronized void addMessageToDB(String nickname, String text, String dest, long latency, boolean delivered, String type) throws SQLException {
 		PreparedStatement stmt = null;
-		Timestamp sendTime = new Timestamp(0);
-		sendTime.setTime(System.currentTimeMillis());
+		Timestamp sendTime = new Timestamp(System.currentTimeMillis()-latency);
 
 		stmt = con.prepareStatement(PredefinedSQLCode.insert_table_queries[1]);
 		stmt.setString(1, nickname);
 		stmt.setString(2, text);
 		stmt.setString(3, dest);
 		stmt.setTimestamp(4, sendTime);
-		stmt.setLong(5, latency);
+		stmt.setInt(5, (int)latency);
 		stmt.setBoolean(6, delivered);
 		stmt.setString(7, type);
 		stmt.executeUpdate();
@@ -187,13 +185,11 @@ public class QueryExecutor {
 	}
 
 	// For monitoring -------------------------------------------------------------------------
-	public synchronized double getAvgLatencyPerPeriod(Date from, Date to) throws SQLException {
+	public synchronized int getAvgLatencyPerPeriod(Date from, Date to) throws SQLException {
 		PreparedStatement stmt = null;
-		double avg = 0;
-		Timestamp before = new Timestamp(0);
-		before.setTime(from.getTime());
-		Timestamp after = new Timestamp(0);
-		after.setTime(to.getTime());
+		int avg = 0;
+		Timestamp before = new Timestamp(from.getTime());
+		Timestamp after = new Timestamp(to.getTime());
 
 		stmt = con.prepareStatement(PredefinedSQLCode.select_queries[5]);
 		stmt.setTimestamp(1, before);
@@ -244,10 +240,8 @@ public class QueryExecutor {
 	public synchronized int countElementsPerPeriod(Date from, Date to, String what)throws SQLException {
 		PreparedStatement stmt = null;
 		int count = 0;
-		Timestamp before = new Timestamp(0);
-		before.setTime(from.getTime());
-		Timestamp after = new Timestamp(0);
-		after.setTime(to.getTime());
+		Timestamp before = new Timestamp(from.getTime());
+		Timestamp after = new Timestamp(to.getTime());
 
 		if(what.equals("Client")) stmt = con.prepareStatement(PredefinedSQLCode.select_queries[3]);
 		else if(what.equals("Msg")) stmt = con.prepareStatement(PredefinedSQLCode.select_queries[4]);

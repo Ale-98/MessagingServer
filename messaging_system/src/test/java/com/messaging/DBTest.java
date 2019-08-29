@@ -15,15 +15,23 @@ public class DBTest {
 		String pwd="6357";
 		
 		QueryExecutor qe = QueryExecutor.getInstance(url, usr, pwd);
-		Timestamp before = new Timestamp(0);
-		Timestamp after = new Timestamp(0);
-		before.setTime(System.currentTimeMillis());
-		Thread.sleep(10);
-		after.setTime(System.currentTimeMillis());
-		System.out.println("Latency: "+(after.getTime()-before.getTime()));
+		
+		Date ora = new Date(System.currentTimeMillis());
+		
+		System.out.println(ora);
+		
+		
+//		Timestamp before = new Timestamp(0);
+//		Timestamp after = new Timestamp(0);
+//		before.setTime(System.currentTimeMillis());
+//		Thread.sleep(10);
+//		after.setTime(System.currentTimeMillis());
+//		System.out.println("Latency: "+(after.getTime()-before.getTime()));
 //		System.out.println("Numero messaggi in DB "+qe.countElements("Msg"));
 //		System.out.println("=== Clients in DB ===");
 //		System.out.println("Current time millis: "+System.nanoTime());
+		
+		
 //		List<String> registered = qe.getRegisteredClients();
 //		for(String s:registered) {
 //			System.out.println(s);

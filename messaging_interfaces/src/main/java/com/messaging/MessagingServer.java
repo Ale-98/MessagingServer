@@ -30,12 +30,11 @@ public interface MessagingServer extends Remote{
 	 * Send a broadcast or a direct message to all clients given as paramenters
 	 * @param from Who has sent the message
 	 * @param msg The message to send
-	 * @param when The instant in which the message has been sent
 	 * @param toClients All the receivers of the Message
 	 * @return true if all messages succeded, false if there are messages not sended 
 	 * @throws RemoteException in case of network issues
 	 */
-	public boolean sendMessage(String who, String msg, long when, String...toClients)throws RemoteException;
+	public boolean sendMessage(String who, String msg, String...toClients)throws RemoteException;
 	
 	/**
 	 * Delete the subscription of a client.

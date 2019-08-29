@@ -36,7 +36,7 @@ public class Client extends UnicastRemoteObject implements MessagingClient{
 				while(!msg.equalsIgnoreCase("exit")) {
 					System.out.println("To: "+who);
 					msg = br.readLine();
-					server.sendMessage(c.getNick(), msg, System.currentTimeMillis(), who); 
+					server.sendMessage(c.getNick(), msg, who); 
 				}
 			}
 		} catch (RemoteException e) {

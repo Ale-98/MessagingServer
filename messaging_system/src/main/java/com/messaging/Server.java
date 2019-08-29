@@ -67,18 +67,6 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		try {
-//			Registry reg = LocateRegistry.createRegistry(1099);
-//			Server theServer = new Server();
-//			reg.rebind("MessagingServer", theServer);
-//			System.out.println("Server bounded");
-//		} catch (RemoteException e) {
-//			System.err.println("Server not bounded");
-//			e.printStackTrace();
-//		}
-//	}
-
 	// Services for clients ---------------------------------------------------------------------------
 	/**
 	 * Used by registration form to add a new client into DB, if a client alredy bounded in DB try to signUp, signIn method is executed
@@ -90,7 +78,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 */
 	public boolean signUp(MessagingClient mc, String nickname, String password) throws RemoteException {
 		try {
-			qe.addClientToDB(nickname, password); // Come gestire gli admin?
+			qe.addClientToDB(nickname, password); 
 			notyNewClient(nickname);
 		} catch (SQLException e) {
 			debugUI.showInDebugWindow("Error while trying to register to DB");
@@ -111,7 +99,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * Used by logIn form to add a client to the currently logged In clients' list.
 	 * @param mc The remote reference to the client to signIn.
 	 * @param nickname The new logged client's nickname.
-	 * @retun true if the client is bounded into DB, else false.
+	 * @return true if the client is bounded into DB, else false.
 	 * @throws RemoteException in case of network issues
 	 */
 	public boolean signIn(MessagingClient mc, String nickname) throws RemoteException {
@@ -160,14 +148,14 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	}
 
 	// Send a single message and store it into DB
-	private boolean sendMsg(String from, String msg, String to, long when, String type) throws RemoteException {
+	private boolean sendMsg(String from, String msg, String to, long sendTime, String type) throws RemoteException {
 		MessagingClient dest;
-		long receiveTime;
+		long receiveTime = 0;
 		debugUI.showInDebugWindow("Server got message from "+from+": "+msg);
 		if(logged.containsKey(to)) {
 			dest = logged.get(to);
 			receiveTime = dest.receiveMsg(msg); // metodo remoto del client
-			storeMessage(from, msg, to, receiveTime-when, true, type); // add message to db as delivered = true;
+			storeMessage(from, msg, to, receiveTime-sendTime, true, type); // add message to db as delivered = true;
 			return true; // messaggio ricevuto
 		}
 		storeMessage(from, msg, to, 0, false, type);// add message to db as delivered = false;
@@ -183,12 +171,13 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @return true if all messages succeded, false if there are messages not sended 
 	 * @throws RemoteException in case of network issues
 	 */
-	public boolean sendMessage(String from, String msg, long when, String... toClients) throws RemoteException {
+	public boolean sendMessage(String from, String msg, String... toClients) throws RemoteException {
 		List<String> dests = Arrays.asList(toClients);
+		long sendTime = System.currentTimeMillis(); // Istante di invio messaggio 
 		String type = dests.size()>1?"broadcast":"direct";
 		boolean errors = true;
 		for(String to:dests) {
-			if(!sendMsg(from, msg, to, when, type)) { 
+			if(!sendMsg(from, msg, to, sendTime, type)) { 
 				errors = false; // almeno un messaggio non è stato ricevuto
 			}
 		}
@@ -253,7 +242,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	}
 
 	// Store a message into DB
-	private boolean storeMessage(String nickName, String text, String dest,  long latency, boolean delivered, String type) throws RemoteException {
+	private boolean storeMessage(String nickName, String text, String dest, long latency, boolean delivered, String type) throws RemoteException {
 		try {
 			qe.addMessageToDB(nickName, text, dest, latency, delivered, type);
 		} catch (SQLException e) {

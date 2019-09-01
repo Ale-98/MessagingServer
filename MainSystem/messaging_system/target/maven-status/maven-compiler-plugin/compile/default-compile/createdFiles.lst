@@ -1,0 +1,8 @@
+com\messaging\DebugUI.class
+com\messaging\ServerUI.class
+com\messaging\Server.class
+com\messaging\ServerUI$1.class
+com\messaging\ServerUI$StartButtonHandler.class
+com\messaging\DebugUI$1.class
+com\messaging\DebugUI$ClearButtonHandler.class
+com\messaging\DebugUI$StopButtonHandler.class

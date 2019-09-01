@@ -73,7 +73,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @param mc The remote reference of the new registered client
 	 * @param nicckname The new registered client's nickname
 	 * @param password The new registered client's password
-	 * @return true if new client wasn't laready bounded in DB, else false
+	 * @return true if new client wasn't already bounded in DB, else false
 	 * @throws RemoteException in case of network issues
 	 */
 	public boolean signUp(MessagingClient mc, String nickname, String password) throws RemoteException {
@@ -329,7 +329,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * @return The avg of latency of sent messages in give time interval.
 	 * @throws RemoteException in case of network issues
 	 */
-	public double getAvgLatencyPerPeriod(Date from, Date to) throws RemoteException {
+	public int getAvgLatencyPerPeriod(Date from, Date to) throws RemoteException {
 		try {
 			return qe.getAvgLatencyPerPeriod(from, to);
 		} catch (SQLException e) {

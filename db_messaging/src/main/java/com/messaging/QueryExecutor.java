@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -50,7 +49,7 @@ public class QueryExecutor {
 	}
 
 	// Singleton pattern
-	public static QueryExecutor getInstance(String url, String usr, String pwd) throws SQLException {
+	public static synchronized QueryExecutor getInstance(String url, String usr, String pwd) throws SQLException {
 		if(qe == null) {
 			qe = new QueryExecutor(url, usr, pwd);
 		}
@@ -265,101 +264,5 @@ public class QueryExecutor {
 		}
 		return count;
 	}
-
-	// In test per client vaadin ----------------------------------------------------------------
-	// For MainView textFiltering by nickname
-	public Collection<User> findAllUsers() throws SQLException{
-
-		Collection<User> result = new ArrayList<User>();
-		String nickName = null;
-		String pwd = null;
-		Timestamp sub = null;
-		Statement stmt = null;
-		try {
-			stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[6]);
-
-			while(rs.next()) {
-				int numCol = rs.getMetaData().getColumnCount();
-				for(int i = 1; i<=numCol; i++) {
-					switch(i) {
-					case 1:
-						nickName = rs.getString(i);
-						break;
-					case 2:
-						pwd = rs.getString(i);
-						break;
-					case 3:
-						sub = rs.getTimestamp(i);
-						break;
-					}
-				}
-				result.add(new User(nickName, pwd, sub));
-				//				}
-			}
-		}
-		catch(SQLException e) {	
-			e.printStackTrace();
-			printSQLException(e);
-		}
-		finally {	
-			if(stmt!=null) stmt.close();
-		}
-		return result;
-	}
-
-	// For MainView textFiltering by nickname
-	public Collection<ChatMessage> findAllMsgs() throws SQLException{
-
-		Collection<ChatMessage> result = new ArrayList<ChatMessage>();
-		String nickName = null;
-		String dest = null;
-		Date dataSend = null;
-		long latency = 0;
-		boolean delivered = false;
-		String type = null;
-		Statement stmt = null;
-		try {
-			stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery(PredefinedSQLCode.select_queries[7]);
-
-			while(rs.next()) {
-				int numCol = rs.getMetaData().getColumnCount();
-				for(int i = 1; i<=numCol; i++) {
-					switch(i) {
-					case 1:
-						nickName = rs.getString(i);
-						break;
-					case 2:
-						dest = rs.getString(i);
-						break;
-					case 3:
-						dataSend = rs.getTimestamp(i);
-						break;
-					case 4:
-						latency = rs.getLong(i);
-						break;
-					case 5:
-						delivered = rs.getBoolean(i);
-						break;
-					case 6:
-						type = rs.getString(i);
-						break;
-					}
-				}
-				result.add(new ChatMessage(nickName, dest, dataSend, latency, delivered, type));
-				//					}
-			}
-		}
-		catch(SQLException e) {	
-			e.printStackTrace();
-			printSQLException(e);
-		}
-		finally {	
-			if(stmt!=null) stmt.close();
-		}
-		return result;
-	}
 }
-
-
+	

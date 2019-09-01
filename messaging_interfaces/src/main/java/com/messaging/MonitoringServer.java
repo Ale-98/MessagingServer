@@ -51,6 +51,6 @@ public interface MonitoringServer extends Remote{
 	 * @return The avg of latency of sent messages in give time interval.
 	 * @throws RemoteException in case of network issues
 	 */
-	public double getAvgLatencyPerPeriod(Date from, Date to)throws RemoteException;
+	public int getAvgLatencyPerPeriod(Date from, Date to)throws RemoteException;
 
 }

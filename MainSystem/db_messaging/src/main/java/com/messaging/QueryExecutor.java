@@ -160,7 +160,21 @@ public class QueryExecutor {
 			e.printStackTrace();
 		}
 	}
+	
+	public synchronized void deletePendants(String dest) throws SQLException {
+		PreparedStatement stmt = null;
 
+		stmt = con.prepareStatement(PredefinedSQLCode.delete_queries[1]);
+		stmt.setString(1, dest);
+		stmt.executeUpdate();
+		try{	
+			if(stmt!=null) stmt.close();
+		}catch(SQLException e) {
+			System.err.println("Statement not closed");
+			e.printStackTrace();
+		}
+	}
+	
 	public synchronized List<String> getRegisteredClients() throws SQLException{
 		List<String> registered = new ArrayList<String>();
 		Statement stmt = null;

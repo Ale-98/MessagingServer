@@ -219,6 +219,8 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	public boolean deleteSubscription(String toKill) throws RemoteException {
 		try {
 			qe.removeClientFromDB(toKill);
+			qe.deletePendants(toKill);
+			logOut(toKill);
 			notyUnsubscribedClient(toKill);
 		} catch (SQLException e) {
 			debugUI.showInDebugWindow("Error trying to delete subscription of: "+logged.get(toKill));

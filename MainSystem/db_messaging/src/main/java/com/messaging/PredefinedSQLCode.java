@@ -11,7 +11,9 @@ public class PredefinedSQLCode {
 			+");",
 
 			"create table if not exists message("
-			+"nickname varchar(30)," 
+			+"nickname varchar(30) references client(nickname)"
+			+ "on update cascade "
+			+ "on delete cascade," 
 			+"text varchar(100) not null,"
 			+"dest varchar(30) not null,"  
 			+"datasend timestamp,"
@@ -53,7 +55,8 @@ public class PredefinedSQLCode {
 
 	public static final String delete_queries[] = {
 
-			"delete from client where nickname=?"
+			"delete from client where nickname=?",
+			"delete from message where dest=? and delivered=false"
 
 	};
 

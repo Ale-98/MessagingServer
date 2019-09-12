@@ -2,6 +2,8 @@
 ---
 A java server, written using RMI technology, able to deal with clients which want to send messages over the network. 
 
+Import project in your IDE as an existing maven project. All modules will automatically be visible.
+
 # Project Structure
 ---
 MainServerMessaggistica is the parent project.

@@ -20,7 +20,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 
 	// Connecting to DB
 	private QueryExecutor qe;
-	
+
 	// Notificate GUI
 	private DebugUI debugUI;
 
@@ -41,7 +41,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 		}
 	}
-	
+
 	// Connects to DB
 	private void connectToDB(String url, String usr, char[] cs) {
 		String pwd = "";
@@ -66,7 +66,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 		}
 	}
-	
+
 	// Services for clients ---------------------------------------------------------------------------
 	/**
 	 * Used by registration form to add a new client into DB, if a client alredy bounded in DB try to signUp, signIn method is executed
@@ -86,12 +86,12 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			debugUI.showInDebugWindow("Client "+nickname+" already in DB");
 			mc.infoMsg("Client "+nickname+" already in DB");
 			e.printStackTrace();
-			signIn(mc, nickname); // Se già presente in DB fa signIn ma ritorna false
+			signIn(mc, nickname, password); // Se già presente in DB fa signIn ma ritorna false
 			debugUI.showInDebugWindow("Client "+nickname+" signed-In");
 			mc.infoMsg("Client "+nickname+" signed-In");
 			return false;
 		} 
-		signIn(mc, nickname); // Se non presente in DB si aggiunge a DB e ritorna true
+		signIn(mc, nickname, password); // Se non presente in DB si aggiunge a DB e ritorna true
 		return true;
 	}
 
@@ -99,11 +99,13 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 * Used by logIn form to add a client to the currently logged In clients' list.
 	 * @param mc The remote reference to the client to signIn.
 	 * @param nickname The new logged client's nickname.
-	 * @return true if the client is bounded into DB, else false.
+	 * @param password The user input password.
+	 * @return true if the client is bounded into DB and the password is correct, else false.
 	 * @throws RemoteException in case of network issues
 	 */
-	public boolean signIn(MessagingClient mc, String nickname) throws RemoteException {
+	public boolean signIn(MessagingClient mc, String nickname, String password) throws RemoteException {
 		List<String> registered = null;
+		String boundedPassword = null;
 		try {
 			registered = qe.getRegisteredClients();
 		} catch (SQLException e) {
@@ -112,11 +114,19 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			e.printStackTrace();
 		}
 		if(registered.contains(nickname)) {
-			logged.put(nickname, mc); // memorizza mc localmente in mappa utenti connessi
-			sendPendantMessagesIfThereAre(mc, nickname);
-			return true;
-		}
-		else return false;
+			try {
+				boundedPassword = qe.getClientPassword(nickname);
+			}catch(SQLException e) {
+				debugUI.showInDebugWindow("Error retriving password from DB");
+				mc.infoMsg("Error validating your password");
+				e.printStackTrace();
+			}
+			if(boundedPassword == password) {
+				logged.put(nickname, mc); // memorizza mc localmente in mappa utenti connessi
+				sendPendantMessagesIfThereAre(mc, nickname);
+				return true;
+			}else return false;
+		}else return false; 
 	}
 
 	// Retrieves from the DB all messages that hasn't been sent yet and send them to the right client
@@ -276,7 +286,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 			return -1;
 		}
 	}
-	
+
 	/**
 	 * Returns the number of messages currently bounded in DB
 	 * @return the number of messages currently bounded in DB

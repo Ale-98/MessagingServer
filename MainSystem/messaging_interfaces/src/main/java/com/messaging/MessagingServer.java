@@ -21,10 +21,11 @@ public interface MessagingServer extends Remote{
 	 * Used by logIn form to add a client to the currently logged In clients' list.
 	 * @param mc The remote reference to the client to signIn.
 	 * @param nickname The new logged client's nickname.
-	 * @retun true if the client is bounded into DB, else false.
+	 * @param password The user input password.
+	 * @retun true if the client is bounded into DB and the password is correct, else false.
 	 * @throws RemoteException in case of network issues
 	 */
-	public boolean signIn(MessagingClient mc, String nickname)throws RemoteException;
+	public boolean signIn(MessagingClient mc, String nickname, String password)throws RemoteException;
 	
 	/**
 	 * Send a broadcast or a direct message to all clients given as paramenters

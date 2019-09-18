@@ -56,9 +56,6 @@ public class QueryExecutor {
 		return qe;
 	}
 
-	// DDQueryExecutor con parametro... aggiungere parametri e setX(..) corrispondenti per eseguire query parametriche
-
-
 	// Query methods for messaging system ----------------------------------------------------------
 	public synchronized void addClientToDB(String nickname, String password) throws SQLException {
 		PreparedStatement stmt = null;
@@ -195,6 +192,28 @@ public class QueryExecutor {
 			e.printStackTrace();
 		}
 		return registered;
+	}
+	
+	public synchronized String getClientPassword(String nickname) throws SQLException {
+		String password = "";
+		PreparedStatement stmt = null;
+
+		stmt = con.prepareStatement(PredefinedSQLCode.select_queries[7]);
+		stmt.setString(1, nickname);
+		ResultSet rs = stmt.executeQuery();
+		while(rs.next()) {
+			int numCol = rs.getMetaData().getColumnCount();
+			for(int i = 1; i<=numCol; i++) {
+				password += rs.getString(i);	
+			}
+		}
+		try{	
+			if(stmt!=null) stmt.close();
+		}catch(SQLException e) {
+			System.err.println("Statement not closed");
+			e.printStackTrace();
+		}
+		return password;
 	}
 
 	// For monitoring -------------------------------------------------------------------------

@@ -48,6 +48,7 @@ public class PredefinedSQLCode {
 			"select count(*) from message where datasend between ? and ?",
 			"select avg(latency) from message where latency != 0 and datasend between ? and ?",
 			"select nickname, text, dest, datasend from message where dest = ? and delivered = false",
+			"select password from client where nickname = ?",
 			"select * from client",
 			"select * from message"
 

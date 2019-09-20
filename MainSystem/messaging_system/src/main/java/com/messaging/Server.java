@@ -105,7 +105,7 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 	 */
 	public boolean signIn(MessagingClient mc, String nickname, String password) throws RemoteException {
 		List<String> registered = null;
-		String boundedPassword = null;
+		String boundedPassword = "";
 		try {
 			registered = qe.getRegisteredClients();
 		} catch (SQLException e) {
@@ -121,12 +121,19 @@ public class Server extends UnicastRemoteObject implements MessagingServer, Moni
 				mc.infoMsg("Error validating your password");
 				e.printStackTrace();
 			}
-			if(boundedPassword == password) {
+			if(boundedPassword.equals(password)) {
+				mc.infoMsg("Password corretta");
 				logged.put(nickname, mc); // memorizza mc localmente in mappa utenti connessi
 				sendPendantMessagesIfThereAre(mc, nickname);
 				return true;
-			}else return false;
-		}else return false; 
+			}else {
+				mc.infoMsg("Password errata");
+				return false;
+			}
+		}else {
+			mc.infoMsg("Devi prima registrarti!");
+			return false; 
+		}
 	}
 
 	// Retrieves from the DB all messages that hasn't been sent yet and send them to the right client

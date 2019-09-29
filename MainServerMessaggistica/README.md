@@ -6,7 +6,7 @@ Import project in your IDE as an existing maven project. All modules will automa
 
 # Project Structure
 ---
-MainServerMessaggistica is the parent project.
+MainSystem is the parent project.
 
   - messaging_system: Server class and a small GUI.
   - messaging_interfaces: Interfaces for Clients and MonitoringServices.
